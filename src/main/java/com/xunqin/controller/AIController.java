@@ -51,6 +51,7 @@ public class AIController {
             sessionId = "default";
         }
         
-        return Result.success(aiService.askQuestion(userId, sessionId, question));
+        String answer = aiService.askQuestion(userId, sessionId, question);
+        return Result.success("操作成功", answer);
     }
 }

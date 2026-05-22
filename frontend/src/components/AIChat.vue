@@ -1,6 +1,12 @@
 <template>
   <div class="ai-assistant">
-    <div class="ai-assistant-icon" @click="toggleChat">
+    <div
+      class="ai-assistant-icon"
+      :style="{ right: iconRight + 'px', bottom: iconBottom + 'px' }"
+      @mousedown="startDrag"
+      @touchstart="startDrag"
+      @click="handleIconClick"
+    >
       <div class="cartoon-avatar">
         <svg viewBox="0 0 100 100" class="cartoon-svg">
           <circle cx="50" cy="45" r="35" fill="#E8F4FD"/>
@@ -26,8 +32,17 @@
         </svg>
       </div>
     </div>
-    <div class="ai-chat-window" :class="{ 'open': isOpen }">
-      <div class="ai-chat-header">
+    <div
+      class="ai-chat-window"
+      :class="{ 'open': isOpen }"
+      :style="chatWindowStyle"
+    >
+      <div
+        class="ai-chat-header"
+        @mousedown="startChatDrag"
+        @touchstart="startChatDrag"
+        style="cursor: grab; user-select: none;"
+      >
         <div class="d-flex align-items-center">
           <div class="mini-avatar me-2">
             <svg viewBox="0 0 100 100" class="mini-svg">
@@ -107,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import api from '@/api'
 
 const isOpen = ref(false)
@@ -116,12 +131,177 @@ const inputText = ref('')
 const messages = ref([{ role: 'assistant', content: '你好！我是AI寻亲助手，有什么可以帮到你的吗？' }])
 const messagesRef = ref(null)
 
+// 图标拖动相关状态
+const iconRight = ref(20)
+const iconBottom = ref(100)
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartY = ref(0)
+const dragStartRight = ref(0)
+const dragStartBottom = ref(0)
+const hasDragged = ref(false)
+
+// 聊天窗口拖动相关状态
+const chatWindowX = ref(null)
+const chatWindowY = ref(null)
+const isChatDragging = ref(false)
+const chatDragStartX = ref(0)
+const chatDragStartY = ref(0)
+const chatDragStartWindowX = ref(0)
+const chatDragStartWindowY = ref(0)
+
+// 聊天窗口样式计算
+const chatWindowStyle = computed(() => {
+  if (chatWindowX.value !== null && chatWindowY.value !== null) {
+    return {
+      position: 'fixed',
+      left: chatWindowX.value + 'px',
+      top: chatWindowY.value + 'px',
+      right: 'auto',
+      bottom: 'auto'
+    }
+  }
+  return {}
+})
+
 function toggleChat() {
   isOpen.value = !isOpen.value
 }
 
 function closeChat() {
   isOpen.value = false
+}
+
+// 处理图标点击（区分拖动和点击）
+function handleIconClick(e) {
+  if (hasDragged.value) {
+    e.stopPropagation()
+    return
+  }
+  toggleChat()
+}
+
+// 开始拖动
+function startDrag(e) {
+  isDragging.value = true
+  hasDragged.value = false
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY
+  dragStartX.value = clientX
+  dragStartY.value = clientY
+  dragStartRight.value = iconRight.value
+  dragStartBottom.value = iconBottom.value
+
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('touchmove', onDrag)
+  document.addEventListener('touchend', stopDrag)
+}
+
+// 拖动中
+function onDrag(e) {
+  if (!isDragging.value) return
+  e.preventDefault()
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY
+  const deltaX = dragStartX.value - clientX
+  const deltaY = clientY - dragStartY.value
+
+  // 如果移动距离超过5px，认为是拖动
+  if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+    hasDragged.value = true
+  }
+
+  iconRight.value = Math.max(10, Math.min(window.innerWidth - 70, dragStartRight.value + deltaX))
+  iconBottom.value = Math.max(10, Math.min(window.innerHeight - 70, dragStartBottom.value - deltaY))
+}
+
+// 停止拖动
+function stopDrag() {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', stopDrag)
+}
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', stopDrag)
+  document.removeEventListener('mousemove', onChatDrag)
+  document.removeEventListener('mouseup', stopChatDrag)
+  document.removeEventListener('touchmove', onChatDrag)
+  document.removeEventListener('touchend', stopChatDrag)
+})
+
+// 开始拖动聊天窗口
+function startChatDrag(e) {
+  // 如果点击的是关闭按钮，不启动拖动
+  if (e.target.closest('.btn-close')) return
+  
+  isChatDragging.value = true
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY
+  
+  chatDragStartX.value = clientX
+  chatDragStartY.value = clientY
+  
+  // 如果还没有设置位置，从默认位置开始
+  if (chatWindowX.value === null || chatWindowY.value === null) {
+    const windowWidth = window.innerWidth
+    const windowHeight = window.innerHeight
+    chatWindowX.value = windowWidth - 380
+    chatWindowY.value = windowHeight - 520
+  }
+  
+  chatDragStartWindowX.value = chatWindowX.value
+  chatDragStartWindowY.value = chatWindowY.value
+  
+  document.addEventListener('mousemove', onChatDrag)
+  document.addEventListener('mouseup', stopChatDrag)
+  document.addEventListener('touchmove', onChatDrag)
+  document.addEventListener('touchend', stopChatDrag)
+  
+  e.preventDefault()
+}
+
+// 拖动聊天窗口中
+function onChatDrag(e) {
+  if (!isChatDragging.value) return
+  e.preventDefault()
+  
+  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
+  const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY
+  
+  const deltaX = clientX - chatDragStartX.value
+  const deltaY = clientY - chatDragStartY.value
+  
+  // 计算新位置
+  let newX = chatDragStartWindowX.value + deltaX
+  let newY = chatDragStartWindowY.value + deltaY
+  
+  // 限制在视窗内
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  const chatWidth = 350
+  const chatHeight = 450
+  
+  newX = Math.max(10, Math.min(windowWidth - chatWidth - 10, newX))
+  newY = Math.max(10, Math.min(windowHeight - chatHeight - 10, newY))
+  
+  chatWindowX.value = newX
+  chatWindowY.value = newY
+}
+
+// 停止拖动聊天窗口
+function stopChatDrag() {
+  isChatDragging.value = false
+  document.removeEventListener('mousemove', onChatDrag)
+  document.removeEventListener('mouseup', stopChatDrag)
+  document.removeEventListener('touchmove', onChatDrag)
+  document.removeEventListener('touchend', stopChatDrag)
 }
 
 async function sendMessage() {

@@ -2,10 +2,17 @@ server:
   port: 8080
   servlet:
     context-path: /
+  tomcat:
+    uri-encoding: UTF-8
 
 spring:
   application:
     name: xunqin-website
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   
   # 数据源配置
   datasource:
@@ -39,9 +46,10 @@ spring:
   
 
   
-  # 静态资源配置
-  resources:
-    static-locations: file:./frontend/dist/,classpath:/static/,file:./uploads/,file:./src/main/resources/static/images/
+  # 静态资源配置 (Spring Boot 2.7+ 使用 web.resources)
+  web:
+    resources:
+      static-locations: file:./frontend/dist/,classpath:/static/,file:./uploads/,file:./src/main/resources/static/images/
 
   # 文件上传配置
   servlet:
