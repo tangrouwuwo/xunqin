@@ -67,6 +67,9 @@ export function missingPersonApi() {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
     update: (id, data) => api.put(`/missing-persons/${id}`, data),
+    updateWithPhotos: (id, formData) => api.put(`/missing-persons/${id}/with-photos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     delete: (id) => api.delete(`/missing-persons/${id}`),
     updateStatus: (id, status) => api.put(`/missing-persons/${id}/status`, { status })
   }

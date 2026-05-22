@@ -7,7 +7,6 @@
       <select v-model="statusFilter" class="form-select w-auto" @change="loadData">
         <option value="">全部状态</option>
         <option value="1">已通过</option>
-        <option value="2">已驳回</option>
       </select>
     </div>
 

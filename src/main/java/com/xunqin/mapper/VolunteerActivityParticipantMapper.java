@@ -2,6 +2,7 @@ package com.xunqin.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xunqin.entity.VolunteerActivityParticipant;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -18,4 +19,7 @@ public interface VolunteerActivityParticipantMapper extends BaseMapper<Volunteer
 
     @Select("SELECT COUNT(*) FROM volunteer_activity_participant WHERE activity_id = #{activityId} AND status = 1 AND is_deleted = 0")
     int countApprovedParticipants(@Param("activityId") Long activityId);
+
+    @Delete("DELETE FROM volunteer_activity_participant WHERE activity_id = #{activityId}")
+    int deletePhysicalByActivityId(@Param("activityId") Long activityId);
 }

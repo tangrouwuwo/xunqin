@@ -66,7 +66,7 @@ async function sendMessage() {
   loading.value = true
   scrollToBottom()
   try {
-    const res = await aiApi().ask({ message: text, history: messages.value.slice(-10) })
+    const res = await aiApi().ask({ question: text })
     if (res.code === 200) {
       messages.value.push({ role: 'assistant', content: res.data || '抱歉，我暂时无法回答这个问题。' })
     } else {

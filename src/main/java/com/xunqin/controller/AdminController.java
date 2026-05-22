@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xunqin.common.result.Result;
 import com.xunqin.entity.User;
 import com.xunqin.entity.MissingPerson;
+import com.xunqin.vo.MissingPersonVO;
 import com.xunqin.entity.Clue;
 import com.xunqin.entity.Task;
 import com.xunqin.entity.SuccessCase;
@@ -118,12 +119,13 @@ public class AdminController {
 
     // 寻亲信息管理
     @GetMapping("/missing-persons")
-    public Result<Page<MissingPerson>> getMissingPersons(
+    public Result<Page<MissingPersonVO>> getMissingPersons(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) String username,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        return Result.success(missingPersonService.getMissingPersonsForAdmin(status, name, pageNum, pageSize));
+        return Result.success(missingPersonService.getMissingPersonsForAdmin(status, name, username, pageNum, pageSize));
     }
 
     @PutMapping("/missing-persons/{id}/approve")

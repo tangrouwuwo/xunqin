@@ -3,6 +3,7 @@ package com.xunqin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xunqin.common.exception.BusinessException;
+import com.xunqin.vo.MissingPersonVO;
 import com.xunqin.entity.MissingPerson;
 import com.xunqin.mapper.MissingPersonMapper;
 import com.xunqin.service.MissingPersonService;
@@ -18,7 +19,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+
+import com.xunqin.entity.User;
 
 @Service
 public class MissingPersonServiceImpl implements MissingPersonService {
@@ -31,6 +36,9 @@ public class MissingPersonServiceImpl implements MissingPersonService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private com.xunqin.mapper.UserMapper userMapper;
 
     @Override
     public Page<MissingPerson> searchMissingPersons(String name, String gender, String location, String startDate, String endDate,
@@ -377,7 +385,7 @@ public class MissingPersonServiceImpl implements MissingPersonService {
     }
 
     @Override
-    public Page<MissingPerson> getMissingPersonsForAdmin(String status, String name, Integer pageNum, Integer pageSize) {
+    public Page<MissingPersonVO> getMissingPersonsForAdmin(String status, String name, String username, Integer pageNum, Integer pageSize) {
         Page<MissingPerson> page = new Page<>(pageNum, pageSize);
         QueryWrapper<MissingPerson> wrapper = new QueryWrapper<>();
 
@@ -387,9 +395,41 @@ public class MissingPersonServiceImpl implements MissingPersonService {
         if (name != null) {
             wrapper.like("name", name);
         }
+        if (username != null) {
+            QueryWrapper<User> userWrapper = new QueryWrapper<>();
+            userWrapper.select("id").like("username", username);
+            List<User> users = userMapper.selectList(userWrapper);
+            if (users.isEmpty()) {
+                return new Page<>(pageNum, pageSize);
+            }
+            List<Long> userIds = new ArrayList<>();
+            for (User u : users) {
+                userIds.add(u.getId());
+            }
+            wrapper.in("seeker_id", userIds);
+        }
 
         wrapper.orderByDesc("create_time");
-        return missingPersonMapper.selectPage(page, wrapper);
+        Page<MissingPerson> resultPage = missingPersonMapper.selectPage(page, wrapper);
+
+        Page<MissingPersonVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
+        List<MissingPersonVO> voList = new ArrayList<>();
+        for (MissingPerson p : resultPage.getRecords()) {
+            String seekerName = "";
+            if (p.getSeekerId() != null) {
+                try {
+                    User u = userService.getUserById(p.getSeekerId());
+                    if (u != null) {
+                        seekerName = u.getUsername();
+                    }
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+            voList.add(new MissingPersonVO(p, seekerName));
+        }
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     @Override

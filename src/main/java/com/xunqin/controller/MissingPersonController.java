@@ -105,6 +105,46 @@ public class MissingPersonController {
         return Result.success("更新成功，等待审核", result);
     }
 
+    @PutMapping("/{id}/with-photos")
+    @PreAuthorize("hasAnyRole('SEEKER', 'ADMIN')")
+    public Result<MissingPerson> updateMissingPersonWithPhotos(Authentication authentication,
+                                                              @PathVariable Long id,
+                                                              @RequestParam("name") String name,
+                                                              @RequestParam(required = false) String gender,
+                                                              @RequestParam(required = false) Integer ageAtMissing,
+                                                              @RequestParam(required = false) String missingDate,
+                                                              @RequestParam(required = false) String missingLocation,
+                                                              @RequestParam(required = false) Integer height,
+                                                              @RequestParam(required = false) Integer weight,
+                                                              @RequestParam(required = false) String bloodType,
+                                                              @RequestParam(required = false) String appearance,
+                                                              @RequestParam(required = false) String clothing,
+                                                              @RequestParam(required = false) String specialFeatures,
+                                                              @RequestParam(required = false) String missingCause,
+                                                              @RequestParam(required = false) String description,
+                                                              @RequestParam(required = false) String contactName,
+                                                              @RequestParam(required = false) String contactPhone,
+                                                              @RequestParam(required = false) MultipartFile[] photos) {
+        Long userId = Long.parseLong(authentication.getPrincipal().toString());
+        MissingPerson missingPerson = new MissingPerson();
+        missingPerson.setName(name);
+        missingPerson.setGender(gender);
+        missingPerson.setAgeAtMissing(ageAtMissing);
+        missingPerson.setMissingDate(missingDate != null ? java.time.LocalDate.parse(missingDate) : null);
+        missingPerson.setMissingLocation(missingLocation);
+        missingPerson.setHeight(height);
+        missingPerson.setWeight(weight);
+        missingPerson.setAppearance(appearance);
+        missingPerson.setClothing(clothing);
+        missingPerson.setSpecialFeatures(specialFeatures);
+        missingPerson.setMissingCause(missingCause);
+        missingPerson.setDescription(description);
+        missingPerson.setContactName(contactName);
+        missingPerson.setContactPhone(contactPhone);
+        MissingPerson result = missingPersonService.updateMissingPerson(id, userId, missingPerson, photos);
+        return Result.success("更新成功，等待审核", result);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SEEKER', 'ADMIN')")
     public Result<?> deleteMissingPerson(Authentication authentication, @PathVariable Long id) {

@@ -311,8 +311,11 @@ public class ClueServiceImpl implements ClueService {
         QueryWrapper<Clue> wrapper = new QueryWrapper<>();
         wrapper.in("missing_person_id", missingPersonIds);
         
+        // 寻亲者只能看见已审核通过的线索（status=1）
         if (status != null) {
             wrapper.eq("status", status);
+        } else {
+            wrapper.eq("status", StatusConstant.CLUE_VERIFIED);
         }
         
         wrapper.orderByDesc("create_time");

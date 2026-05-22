@@ -65,6 +65,9 @@
               <button class="btn btn-sm btn-outline-info" title="查看报告" @click="viewReports(item)">
                 <i class="fas fa-file-alt"></i>
               </button>
+              <button class="btn btn-sm btn-outline-danger" title="删除活动（不可恢复）" @click="deleteActivity(item)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -430,6 +433,19 @@ function viewParticipants(item) {
 function viewReports(item) {
   selectedActivity.value = item
   showReports.value = true
+}
+
+async function deleteActivity(item) {
+  if (!confirm('确定要永久删除活动「' + item.title + '」吗？\n删除后无法恢复，相关的报名、报告、进度数据也会一并删除。')) return
+  try {
+    const res = await volunteerActivityApi().delete(item.id)
+    if (res.code === 200) {
+      alert('删除成功')
+      loadData()
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e) { alert('删除失败') }
 }
 
 onMounted(() => loadData())

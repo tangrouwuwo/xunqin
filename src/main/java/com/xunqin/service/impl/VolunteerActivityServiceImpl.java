@@ -197,9 +197,6 @@ public class VolunteerActivityServiceImpl implements VolunteerActivityService {
         if (activity == null || activity.getIsDeleted() == 1) {
             throw new BusinessException("活动不存在");
         }
-        if (!activity.getPublisherId().equals(publisherId)) {
-            throw new BusinessException("无权删除此活动");
-        }
 
         // 删除关联的封面图片文件
         String coverImage = activity.getCoverImage();
@@ -207,7 +204,20 @@ public class VolunteerActivityServiceImpl implements VolunteerActivityService {
             deleteCoverImage(coverImage);
         }
 
-        activityMapper.deleteById(activityId);
+        // 删除关联的参与记录（物理删除）
+        participantMapper.deletePhysicalByActivityId(activityId);
+        // 先查出参与记录ID以删除关联的报告
+        QueryWrapper<VolunteerActivityReport> reportWrapper = new QueryWrapper<>();
+        reportWrapper.apply("participant_id IN (SELECT id FROM volunteer_activity_participant WHERE activity_id = {0})", activityId);
+        List<VolunteerActivityReport> reports = reportMapper.selectList(reportWrapper);
+        for (VolunteerActivityReport report : reports) {
+            reportMapper.physicalDeleteById(report.getId());
+        }
+        // 删除关联的进度记录（物理删除）
+        progressMapper.deletePhysicalByActivityId(activityId);
+
+        // 物理删除活动本身
+        activityMapper.deleteByIdPhysical(activityId);
     }
 
     /**

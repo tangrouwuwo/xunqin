@@ -44,11 +44,9 @@ public class AIServiceImpl implements AIService {
 
     @Override
     public List<Map<String, Object>> searchByRegion(String region) {
-        // 调用MissingPersonService的搜索方法，根据地区搜索失踪人员
         Page<MissingPerson> page = missingPersonService.searchMissingPersons(null, null, region, null, null, 1, 100);
         List<MissingPerson> missingPersons = page.getRecords();
 
-        // 转换为Map列表，方便前端展示
         List<Map<String, Object>> result = new ArrayList<>();
         for (MissingPerson person : missingPersons) {
             Map<String, Object> personMap = new HashMap<>();
@@ -72,24 +70,19 @@ public class AIServiceImpl implements AIService {
 
     @Override
     public String askQuestion(Long userId, String sessionId, String question) {
-        // 保存用户问题
         saveChatMessage(userId, sessionId, "user", question);
-        
-        // 1. 首先尝试使用系统数据和功能回答问题
+
         String systemAnswer = getSystemAnswer(question);
         if (systemAnswer != null) {
-            // 保存系统回答
             saveChatMessage(userId, sessionId, "assistant", systemAnswer);
             return systemAnswer;
         }
-        
-        // 2. 如果系统无法回答，再调用AI API获取全网内容
+
         String aiAnswer = getAIAnswer(question);
-        // 保存AI回答
         saveChatMessage(userId, sessionId, "assistant", aiAnswer);
         return aiAnswer;
     }
-    
+
     private void saveChatMessage(Long userId, String sessionId, String role, String content) {
         AIChatMessage chatMessage = new AIChatMessage();
         chatMessage.setUserId(userId);
@@ -98,52 +91,70 @@ public class AIServiceImpl implements AIService {
         chatMessage.setContent(content);
         aiChatMessageMapper.insert(chatMessage);
     }
-    
+
     private String getSystemAnswer(String question) {
         question = question.toLowerCase();
-        
-        // 检查是否是关于寻亲信息的问题
+
         if (question.contains("寻亲") || question.contains("失踪") || question.contains("找人")) {
-            // 检查是否包含地区信息
-            if (question.contains("北京")) {
-                return getRegionAnswer("北京");
-            } else if (question.contains("上海")) {
-                return getRegionAnswer("上海");
-            } else if (question.contains("广州")) {
-                return getRegionAnswer("广州");
-            } else if (question.contains("深圳")) {
-                return getRegionAnswer("深圳");
-            } else if (question.contains("成都")) {
-                return getRegionAnswer("成都");
-            } else if (question.contains("杭州")) {
-                return getRegionAnswer("杭州");
-            }
+            if (question.contains("北京")) return getRegionAnswer("北京");
+            else if (question.contains("上海")) return getRegionAnswer("上海");
+            else if (question.contains("广州")) return getRegionAnswer("广州");
+            else if (question.contains("深圳")) return getRegionAnswer("深圳");
+            else if (question.contains("成都")) return getRegionAnswer("成都");
+            else if (question.contains("杭州")) return getRegionAnswer("杭州");
+            else if (question.contains("武汉")) return getRegionAnswer("武汉");
+            else if (question.contains("重庆")) return getRegionAnswer("重庆");
+            else if (question.contains("南京")) return getRegionAnswer("南京");
+            else if (question.contains("西安")) return getRegionAnswer("西安");
         }
-        
-        // 检查是否是关于系统功能的问题
-        if (question.contains("如何") && (question.contains("发布") || question.contains("提交"))) {
-            return "您可以在网站首页点击'发布寻亲信息'按钮，填写相关信息并上传照片，提交后等待管理员审核通过即可。";
+
+        if (question.contains("如何") && question.contains("发布")) {
+            return "发布寻亲信息的步骤如下：\n1. 登录网站后，在导航栏中找到'发布寻亲信息'按钮并点击\n2. 填写被寻人的详细信息：姓名、性别、失踪年龄、失踪日期、失踪地点、身高、体重、血型等\n3. 描述体貌特征、衣着描述、特殊特征（胎记、疤痕等）、失踪原因\n4. 填写您的联系方式和联系人信息\n5. 可以上传被寻人的照片（支持多张）\n6. 点击'发布寻亲信息'按钮提交\n7. 提交后请等待管理员审核，审核通过后信息将在网站上展示\n提示：信息越详细，找到亲人的概率越大。";
         }
-        
+
+        if (question.contains("如何") && question.contains("线索") || question.contains("提供")) {
+            return "提供线索的步骤如下：\n1. 在寻亲信息详情页找到您想提供线索的寻亲信息\n2. 点击'提供线索'按钮\n3. 填写线索内容，尽可能详细描述您所知道的信息\n4. 您可以选择匿名提交或实名提交（实名提交需要填写联系方式）\n5. 点击提交，线索将发送给管理员审核\n6. 审核通过后，寻亲者将能看到您提供的线索\n注意：请确保您提供的线索真实可靠，有助于寻亲者找到亲人。";
+        }
+
         if (question.contains("如何") && question.contains("搜索")) {
-            return "您可以在网站首页的搜索框中输入姓名、性别、失踪地点等信息进行搜索，也可以通过筛选条件缩小搜索范围。";
+            return "搜索寻亲信息的方法：\n1. 在网站首页的搜索框中输入被寻人的姓名进行搜索\n2. 也可以使用高级筛选功能，按性别、失踪地点、失踪日期等条件筛选\n3. 搜索结果会展示所有已审核通过的寻亲信息\n4. 点击任意结果可以查看详细信息，包括照片、体貌特征、联系方式等\n5. 您还可以按热门程度查看最受关注的寻亲信息";
         }
-        
+
         if (question.contains("如何") && question.contains("联系")) {
-            return "在每个寻亲信息详情页，您可以找到联系人信息，包括姓名、电话和邮箱。请直接通过这些方式与寻亲者联系。";
+            return "在每一条寻亲信息的详情页中，您都可以找到发布者填写的联系信息，包括：\n- 联系人姓名\n- 联系电话\n- 联系邮箱\n请直接通过这些方式与寻亲者或其家属取得联系。如果您希望保护隐私，也可以先通过网站提供线索，等待对方联系您。";
         }
-        
-        if (question.contains("什么是") && (question.contains("寻亲") || question.contains("失踪"))) {
-            return "寻亲是指寻找失踪的亲人或朋友的过程。本网站致力于帮助用户发布寻亲信息、搜索失踪人员，并提供相关的支持和资源。";
+
+        if (question.contains("志愿者") || question.contains("志愿") && (question.contains("条件") || question.contains("加入") || question.contains("成为"))) {
+            return "成为志愿者的条件和流程：\n1. 在网站上注册账号\n2. 在个人中心找到'志愿者申请'入口\n3. 填写申请表，包括您的个人介绍、志愿服务的意愿和可投入的时间\n4. 提交申请后等待管理员审核\n5. 审核通过后您将成为正式志愿者\n志愿者可以参与的任务包括：协助搜索、线索核实、信息整理、协助发布寻亲信息等。";
         }
-        
-        if (question.contains("成功率") || question.contains("成功案例")) {
-            return "本网站已经帮助多个家庭成功团聚。您可以在'成功案例'页面查看具体的成功故事，了解寻亲过程和经验。";
+
+        if (question.contains("成功案例") || question.contains("团聚") || question.contains("找到")) {
+            return "本网站致力于帮助失散家庭团圆，目前已帮助多个家庭成功找到失散的亲人。您可以在网站'成功案例'栏目中查看：\n- 详细的寻亲成功故事\n- 寻亲过程中的经验和技巧\n- 团聚家庭的感人瞬间\n每个成功案例都展示了坚持寻亲的重要性，也证明了本网站寻亲模式的有效性。";
         }
-        
-        return null; // 系统无法回答
+
+        if ((question.contains("审核") || question.contains("多久")) && question.contains("通过")) {
+            return "寻亲信息提交后，管理员通常会在1-3个工作日内完成审核。如果审核通过，您的信息将在网站上展示；如果被拒绝，您会收到拒绝原因，可以根据原因修改后重新提交。审核期间请耐心等待，您也可以在'我的寻亲信息'中查看审核状态。";
+        }
+
+        if (question.contains("修改") || question.contains("编辑")) {
+            return "如果您需要修改已发布的寻亲信息：\n1. 登录后进入'我的寻亲信息'页面\n2. 找到需要修改的寻亲信息，点击'编辑'按钮\n3. 在弹出的编辑窗口中修改信息\n4. 提交修改后，信息将重新进入审核流程\n5. 审核通过后修改生效\n提示：如果信息已审核通过，修改后需要重新审核，请确保修改内容的准确性。";
+        }
+
+        if (question.contains("删除")) {
+            return "如果您需要删除已发布的寻亲信息：\n1. 登录后进入'我的寻亲信息'页面\n2. 找到需要删除的寻亲信息\n3. 点击'删除'按钮并确认\n4. 删除后该信息将不再在网站上展示\n注意：删除操作不可撤销，请谨慎操作。";
+        }
+
+        if (question.contains("注册") || question.contains("账号") || question.contains("登录")) {
+            return "账号相关操作：\n1. 注册：点击首页'注册'按钮，填写用户名、密码和基本信息完成注册\n2. 登录：使用注册的账号和密码登录\n3. 找回密码：如忘记密码，可联系管理员协助处理\n注册后您可以发布寻亲信息、提供线索、参与社区讨论等。";
+        }
+
+        if (question.contains("匿名") || question.contains("隐私") || question.contains("保密")) {
+            return "本网站高度重视用户隐私保护：\n1. 提供线索时，您可以选择匿名提交，寻亲者将看不到您的个人信息\n2. 您的个人联系方式仅在您实名提交线索时才会被对方看到\n3. 网站会对所有用户信息进行加密存储\n4. 我们严格遵守相关法律法规，保护用户数据安全\n5. 您可以在个人中心查看和管理您的个人信息";
+        }
+
+        return null;
     }
-    
+
     private String getRegionAnswer(String region) {
         List<Map<String, Object>> results = searchByRegion(region);
         if (results.isEmpty()) {
@@ -152,7 +163,7 @@ public class AIServiceImpl implements AIService {
             StringBuilder answer = new StringBuilder("在" + region + "地区找到以下寻亲信息：\n\n");
             int count = 0;
             for (Map<String, Object> person : results) {
-                if (count >= 5) break; // 最多显示5条
+                if (count >= 5) break;
                 answer.append("姓名：").append(person.get("name"))
                       .append("，性别：").append(person.get("gender"))
                       .append("，年龄：").append(person.get("age"))
@@ -167,42 +178,34 @@ public class AIServiceImpl implements AIService {
             return answer.toString();
         }
     }
-    
+
     private String getAIAnswer(String question) {
-        // 构建请求头
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + deepseekApiKey);
 
-        // 构建请求体
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", "deepseek-chat");
-        
-        // 构建messages列表
+
         List<Map<String, Object>> messages = new ArrayList<>();
-        
-        // 系统消息
+
         Map<String, Object> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
-        systemMessage.put("content", "你是一个寻亲网站的AI助手，专门帮助用户寻找失踪的亲人。请友好、专业地回答用户的问题，提供有关寻亲流程、注意事项等信息。");
+        systemMessage.put("content", "你是一个专业的寻亲网站AI助手，系统名称是'寻亲网'。你的职责是帮助用户寻找失踪的亲人。请严格按照以下规则回答：\n\n1. 回答必须与本寻亲网站系统相关，包括但不限于：寻亲信息发布、线索提供、志愿者服务、成功案例、账号管理等\n2. 如果用户的问题与寻亲无关，请委婉地引导回到寻亲主题\n3. 回答要友好、温暖、有同理心，理解寻亲者的急切心情\n4. 提供专业、实用的建议，帮助用户更有效地寻亲\n5. 如果用户问到关于本网站的具体功能，请根据网站实际功能回答\n6. 可以向用户推荐网站的以下功能：发布寻亲信息、搜索失踪人员、提供线索、查看成功案例、申请成为志愿者\n7. 对于不确定的信息，不要编造，建议用户联系网站管理员获取准确信息\n8. 回答要简洁明了，使用中文，避免过于复杂的表述");
         messages.add(systemMessage);
-        
-        // 用户消息
+
         Map<String, Object> userMessage = new HashMap<>();
         userMessage.put("role", "user");
         userMessage.put("content", question);
         messages.add(userMessage);
-        
+
         requestBody.put("messages", messages);
         requestBody.put("temperature", 0.7);
         requestBody.put("max_tokens", 500);
 
-        // 发送请求
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(deepseekApiUrl, requestEntity, String.class);
-
-        // 解析响应
         try {
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(deepseekApiUrl, requestEntity, String.class);
             JsonNode rootNode = objectMapper.readTree(responseEntity.getBody());
             JsonNode choicesNode = rootNode.get("choices");
             if (choicesNode != null && choicesNode.isArray() && choicesNode.size() > 0) {
@@ -218,6 +221,6 @@ public class AIServiceImpl implements AIService {
             e.printStackTrace();
         }
 
-        return "抱歉，我无法回答您的问题，请稍后再试。";
+        return "抱歉，我暂时无法回答您的问题，请稍后再试，或者您也可以联系网站管理员获取帮助。";
     }
 }

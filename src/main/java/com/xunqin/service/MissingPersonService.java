@@ -69,7 +69,7 @@ public interface MissingPersonService {
     /**
      * 获取寻亲信息列表（管理员）
      */
-    Page<MissingPerson> getMissingPersonsForAdmin(String status, String name, Integer pageNum, Integer pageSize);
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.xunqin.vo.MissingPersonVO> getMissingPersonsForAdmin(String status, String name, String username, Integer pageNum, Integer pageSize);
 
     /**
      * 更新寻亲信息状态
