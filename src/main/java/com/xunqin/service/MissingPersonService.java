@@ -8,7 +8,7 @@ public interface MissingPersonService {
     /**
      * 搜索寻亲信息
      */
-    Page<MissingPerson> searchMissingPersons(String name, String gender, String location, String startDate, String endDate,
+    Page<MissingPerson> searchMissingPersons(String name, String gender, String location, String province, String startDate, String endDate,
                                             Integer pageNum, Integer pageSize);
 
     /**
@@ -75,4 +75,9 @@ public interface MissingPersonService {
      * 更新寻亲信息状态
      */
     void updateMissingPersonStatus(Long id, String status);
+
+    /**
+     * 获取寻亲信息的变更记录
+     */
+    java.util.List<com.xunqin.entity.MissingPersonChangeLog> getChangeLogs(Long missingPersonId);
 }

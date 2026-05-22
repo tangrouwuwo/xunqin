@@ -24,13 +24,14 @@ public class MissingPersonController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String gender,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) String province,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "20") Integer pageSize) {
         
         Page<MissingPerson> page = missingPersonService.searchMissingPersons(
-                name, gender, location, startDate, endDate, pageNum, pageSize);
+                name, gender, location, province, startDate, endDate, pageNum, pageSize);
         return Result.success(page);
     }
 
@@ -59,11 +60,12 @@ public class MissingPersonController {
     @PostMapping("/with-photos")
     @PreAuthorize("hasAnyRole('SEEKER', 'ADMIN')")
     public Result<MissingPerson> createMissingPersonWithPhotos(Authentication authentication,
+                                                              @RequestParam("title") String title,
                                                               @RequestParam("name") String name,
                                                               @RequestParam(required = false) String gender,
-                                                              @RequestParam(required = false) Integer ageAtMissing,
-                                                              @RequestParam(required = false) String missingDate,
-                                                              @RequestParam(required = false) String missingLocation,
+                                                              @RequestParam("ageAtMissing") Integer ageAtMissing,
+                                                              @RequestParam("missingDate") String missingDate,
+                                                              @RequestParam("missingLocation") String missingLocation,
                                                               @RequestParam(required = false) Integer height,
                                                               @RequestParam(required = false) Integer weight,
                                                               @RequestParam(required = false) String appearance,
@@ -76,6 +78,7 @@ public class MissingPersonController {
                                                               @RequestParam(required = false) MultipartFile[] photos) {
         Long userId = Long.parseLong(authentication.getPrincipal().toString());
         MissingPerson missingPerson = new MissingPerson();
+        missingPerson.setTitle(title);
         missingPerson.setName(name);
         missingPerson.setGender(gender);
         missingPerson.setAgeAtMissing(ageAtMissing);
@@ -83,7 +86,6 @@ public class MissingPersonController {
         missingPerson.setMissingLocation(missingLocation);
         missingPerson.setHeight(height);
         missingPerson.setWeight(weight);
-
         missingPerson.setAppearance(appearance);
         missingPerson.setClothing(clothing);
         missingPerson.setSpecialFeatures(specialFeatures);
@@ -109,11 +111,12 @@ public class MissingPersonController {
     @PreAuthorize("hasAnyRole('SEEKER', 'ADMIN')")
     public Result<MissingPerson> updateMissingPersonWithPhotos(Authentication authentication,
                                                               @PathVariable Long id,
+                                                              @RequestParam("title") String title,
                                                               @RequestParam("name") String name,
                                                               @RequestParam(required = false) String gender,
-                                                              @RequestParam(required = false) Integer ageAtMissing,
-                                                              @RequestParam(required = false) String missingDate,
-                                                              @RequestParam(required = false) String missingLocation,
+                                                              @RequestParam("ageAtMissing") Integer ageAtMissing,
+                                                              @RequestParam("missingDate") String missingDate,
+                                                              @RequestParam("missingLocation") String missingLocation,
                                                               @RequestParam(required = false) Integer height,
                                                               @RequestParam(required = false) Integer weight,
                                                               @RequestParam(required = false) String bloodType,
@@ -127,6 +130,7 @@ public class MissingPersonController {
                                                               @RequestParam(required = false) MultipartFile[] photos) {
         Long userId = Long.parseLong(authentication.getPrincipal().toString());
         MissingPerson missingPerson = new MissingPerson();
+        missingPerson.setTitle(title);
         missingPerson.setName(name);
         missingPerson.setGender(gender);
         missingPerson.setAgeAtMissing(ageAtMissing);

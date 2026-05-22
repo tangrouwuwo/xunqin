@@ -6,6 +6,7 @@ import com.xunqin.entity.User;
 import com.xunqin.entity.MissingPerson;
 import com.xunqin.vo.MissingPersonVO;
 import com.xunqin.entity.Clue;
+import com.xunqin.entity.MissingPersonChangeLog;
 import com.xunqin.entity.Task;
 import com.xunqin.entity.SuccessCase;
 import com.xunqin.service.*;
@@ -144,6 +145,12 @@ public class AdminController {
     public Result<?> deleteMissingPerson(@PathVariable Long id) {
         missingPersonService.deleteMissingPerson(id, null);
         return Result.success("删除成功");
+    }
+
+    @GetMapping("/missing-persons/{id}/change-logs")
+    public Result<java.util.List<MissingPersonChangeLog>> getMissingPersonChangeLogs(@PathVariable Long id) {
+        java.util.List<MissingPersonChangeLog> logs = missingPersonService.getChangeLogs(id);
+        return Result.success(logs);
     }
 
     // 线索管理

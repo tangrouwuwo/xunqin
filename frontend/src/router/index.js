@@ -7,6 +7,7 @@ const routes = [
     component: () => import('@/layouts/PublicLayout.vue'),
     children: [
       { path: '', name: 'Home', component: () => import('@/views/public/Home.vue') },
+      { path: 'missing-persons-search', name: 'MissingPersonSearch', component: () => import('@/views/public/MissingPersonSearch.vue') },
       { path: 'success-cases', name: 'SuccessCases', component: () => import('@/views/public/SuccessCases.vue') },
       { path: 'community', name: 'Community', component: () => import('@/views/public/Community.vue') },
       { path: 'volunteer', name: 'Volunteer', component: () => import('@/views/public/Volunteer.vue') },

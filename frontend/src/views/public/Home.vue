@@ -6,8 +6,11 @@
         <h1 class="display-4 fw-bold mb-4 fade-in visible">让爱回家，让亲情重聚</h1>
         <p class="lead mb-5 fade-in visible">我们致力于帮助失散家庭重新团聚，通过社会力量和科技手段，让每一个寻亲者都能找到回家的路。</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
-          <router-link to="/success-cases" class="btn btn-light text-primary fw-bold px-5 py-3 rounded-3 shadow-lg">
-            <i class="fas fa-search me-2"></i> 寻找亲人
+          <router-link to="/missing-persons-search" class="btn btn-light text-primary fw-bold px-5 py-3 rounded-3 shadow-lg">
+            <i class="fas fa-search me-2"></i> 寻亲查询
+          </router-link>
+          <router-link to="/success-cases" class="btn btn-outline-light fw-bold px-5 py-3 rounded-3 border-2">
+            <i class="fas fa-calendar-check me-2"></i> 成功案例
           </router-link>
           <router-link to="/community" class="btn btn-outline-light fw-bold px-5 py-3 rounded-3 border-2">
             <i class="fas fa-lightbulb me-2"></i> 提供线索

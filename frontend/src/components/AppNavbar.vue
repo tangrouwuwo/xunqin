@@ -16,6 +16,11 @@
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link class="nav-link" :class="{ 'active-true': $route.path === '/missing-persons-search' }" to="/missing-persons-search">
+              <i class="fas fa-search me-1"></i> 寻亲查询
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link class="nav-link" :class="{ 'active-true': $route.path === '/success-cases' }" to="/success-cases">
               <i class="fas fa-calendar-check me-1"></i> 成功案例
             </router-link>

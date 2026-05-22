@@ -4,6 +4,10 @@
     <div class="card">
       <div class="card-body">
         <div class="row">
+          <div class="col-12 mb-3">
+            <label class="form-label">标题 <span class="text-danger">*</span></label>
+            <input v-model="form.title" class="form-control" placeholder="例如：寻找1998年失踪的女儿" required>
+          </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">姓名 <span class="text-danger">*</span></label>
             <input v-model="form.name" class="form-control" required>
@@ -17,16 +21,32 @@
             </select>
           </div>
           <div class="col-md-3 mb-3">
-            <label class="form-label">失踪年龄</label>
-            <input v-model="form.ageAtMissing" type="number" class="form-control">
+            <label class="form-label">失踪年龄 <span class="text-danger">*</span></label>
+            <input v-model="form.ageAtMissing" type="number" class="form-control" required>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">失踪日期</label>
-            <input v-model="form.missingDate" type="date" class="form-control">
+            <label class="form-label">失踪日期 <span class="text-danger">*</span></label>
+            <input v-model="form.missingDate" type="date" class="form-control" required>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">失踪地点</label>
-            <input v-model="form.missingLocation" class="form-control">
+            <label class="form-label">失踪地点 <span class="text-danger">*</span></label>
+            <div class="row g-2">
+              <div class="col-md-5 mb-2">
+                <select v-model="form.province" class="form-control" @change="form.city = ''">
+                  <option value="">请选择省/直辖市</option>
+                  <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-2">
+                <select v-model="form.city" class="form-control">
+                  <option value="">请选择市/区</option>
+                  <option v-for="c in cities" :key="c" :value="c">{{ c }}</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-2">
+                <input v-model="form.detailLocation" class="form-control" placeholder="详细地址">
+              </div>
+            </div>
           </div>
           <div class="col-md-4 mb-3">
             <label class="form-label">身高(cm)</label>
@@ -90,9 +110,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { missingPersonApi } from '@/api'
+import { provinces, citiesByProvince, buildLocation } from '@/utils/chinaRegions'
 
 const router = useRouter()
 const submitting = ref(false)
@@ -101,9 +122,14 @@ const selectedFiles = ref([])
 const previewImages = ref([])
 
 const form = reactive({
-  name: '', gender: '', ageAtMissing: '', missingDate: '', missingLocation: '',
+  title: '', name: '', gender: '', ageAtMissing: '', missingDate: '',
+  province: '', city: '', detailLocation: '', missingLocation: '',
   height: '', weight: '', bloodType: '', appearance: '', clothing: '',
   specialFeatures: '', missingCause: '', description: '', contactName: '', contactPhone: ''
+})
+
+const cities = computed(() => {
+  return citiesByProvince[form.province] || []
 })
 
 function handleFileChange(e) {
@@ -124,16 +150,23 @@ function removeImage(idx) {
 }
 
 async function submitForm() {
+  if (!form.title) { alert('请输入标题'); return }
   if (!form.name) { alert('请输入姓名'); return }
+  if (!form.ageAtMissing) { alert('请输入失踪年龄'); return }
+  if (!form.missingDate) { alert('请选择失踪日期'); return }
+  if (!form.province) { alert('请选择失踪省份'); return }
+  if (!form.city) { alert('请选择失踪市/区'); return }
+  form.missingLocation = buildLocation(form.province, form.city, form.detailLocation)
   submitting.value = true
   try {
     if (selectedFiles.value.length > 0) {
       const fd = new FormData()
+      fd.append('title', form.title)
       fd.append('name', form.name)
       if (form.gender) fd.append('gender', form.gender)
-      if (form.ageAtMissing) fd.append('ageAtMissing', form.ageAtMissing)
-      if (form.missingDate) fd.append('missingDate', form.missingDate)
-      if (form.missingLocation) fd.append('missingLocation', form.missingLocation)
+      fd.append('ageAtMissing', form.ageAtMissing)
+      fd.append('missingDate', form.missingDate)
+      fd.append('missingLocation', form.missingLocation)
       if (form.height) fd.append('height', form.height)
       if (form.weight) fd.append('weight', form.weight)
       if (form.bloodType) fd.append('bloodType', form.bloodType)

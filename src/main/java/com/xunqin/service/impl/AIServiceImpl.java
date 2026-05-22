@@ -46,7 +46,7 @@ public class AIServiceImpl implements AIService {
 
     @Override
     public List<Map<String, Object>> searchByRegion(String region) {
-        Page<MissingPerson> page = missingPersonService.searchMissingPersons(null, null, region, null, null, 1, 100);
+        Page<MissingPerson> page = missingPersonService.searchMissingPersons(null, null, region, null, null, null, 1, 100);
         List<MissingPerson> missingPersons = page.getRecords();
 
         List<Map<String, Object>> result = new ArrayList<>();

@@ -4,13 +4,14 @@
     <div class="table-responsive">
       <table class="table table-hover">
         <thead class="table-light">
-          <tr><th>ID</th><th>姓名</th><th>性别</th><th>失踪日期</th><th>状态</th><th>操作</th></tr>
+          <tr><th>ID</th><th>标题</th><th>姓名</th><th>性别</th><th>失踪日期</th><th>状态</th><th>操作</th></tr>
         </thead>
         <tbody>
-          <tr v-if="loading"><td colspan="6" class="text-center py-4"><div class="loader"></div></td></tr>
-          <tr v-else-if="list.length === 0"><td colspan="6" class="text-center text-muted py-4">暂无寻亲信息</td></tr>
+          <tr v-if="loading"><td colspan="7" class="text-center py-4"><div class="loader"></div></td></tr>
+          <tr v-else-if="list.length === 0"><td colspan="7" class="text-center text-muted py-4">暂无寻亲信息</td></tr>
           <tr v-for="item in list" :key="item.id">
             <td>{{ item.id }}</td>
+            <td class="fw-bold">{{ item.title || item.name }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.gender || '-' }}</td>
             <td>{{ item.missingDate || '-' }}</td>
@@ -29,10 +30,11 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">寻亲详情 - {{ detailItem.name }}</h5>
+            <h5 class="modal-title">寻亲详情</h5>
             <button type="button" class="btn-close" @click="showDetail = false"></button>
           </div>
           <div class="modal-body">
+            <h3 class="fw-bold mb-3">{{ detailItem.title || detailItem.name }}</h3>
             <div class="row">
               <div class="col-md-6"><strong>姓名：</strong>{{ detailItem.name }}</div>
               <div class="col-md-6"><strong>性别：</strong>{{ detailItem.gender || '-' }}</div>
@@ -55,11 +57,15 @@
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">修改寻亲信息 - {{ editForm.name }}</h5>
+            <h5 class="modal-title">修改寻亲信息</h5>
             <button type="button" class="btn-close" @click="showEdit = false"></button>
           </div>
           <div class="modal-body">
             <div class="row">
+              <div class="col-12 mb-3">
+                <label class="form-label">标题 <span class="text-danger">*</span></label>
+                <input v-model="editForm.title" class="form-control" required>
+              </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">姓名 <span class="text-danger">*</span></label>
                 <input v-model="editForm.name" class="form-control" required>
@@ -73,16 +79,32 @@
                 </select>
               </div>
               <div class="col-md-3 mb-3">
-                <label class="form-label">失踪年龄</label>
-                <input v-model="editForm.ageAtMissing" type="number" class="form-control">
+                <label class="form-label">失踪年龄 <span class="text-danger">*</span></label>
+                <input v-model="editForm.ageAtMissing" type="number" class="form-control" required>
               </div>
               <div class="col-md-6 mb-3">
-                <label class="form-label">失踪日期</label>
-                <input v-model="editForm.missingDate" type="date" class="form-control">
+                <label class="form-label">失踪日期 <span class="text-danger">*</span></label>
+                <input v-model="editForm.missingDate" type="date" class="form-control" required>
               </div>
               <div class="col-md-6 mb-3">
-                <label class="form-label">失踪地点</label>
-                <input v-model="editForm.missingLocation" class="form-control">
+                <label class="form-label">失踪地点 <span class="text-danger">*</span></label>
+                <div class="row g-2">
+                  <div class="col-md-5 mb-2">
+                    <select v-model="editForm.province" class="form-control" @change="editForm.city = ''">
+                      <option value="">请选择省/直辖市</option>
+                      <option v-for="p in editProvinces" :key="p" :value="p">{{ p }}</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <select v-model="editForm.city" class="form-control">
+                      <option value="">请选择市/区</option>
+                      <option v-for="c in editCities" :key="c" :value="c">{{ c }}</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3 mb-2">
+                    <input v-model="editForm.detailLocation" class="form-control" placeholder="详细地址">
+                  </div>
+                </div>
               </div>
               <div class="col-md-4 mb-3">
                 <label class="form-label">身高(cm)</label>
@@ -149,8 +171,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { missingPersonApi } from '@/api'
+import { provinces as editProvinces, citiesByProvince as editCitiesByProvince, parseLocation, buildLocation } from '@/utils/chinaRegions'
 
 const list = ref([])
 const loading = ref(true)
@@ -162,11 +185,16 @@ const editFileInput = ref(null)
 const editSelectedFiles = ref([])
 const editPreviewImages = ref([])
 const editForm = ref({
-  name: '', gender: '', ageAtMissing: '', missingDate: '', missingLocation: '',
+  title: '', name: '', gender: '', ageAtMissing: '', missingDate: '',
+  province: '', city: '', detailLocation: '', missingLocation: '',
   height: '', weight: '', bloodType: '', appearance: '', clothing: '',
   specialFeatures: '', missingCause: '', description: '', contactName: '', contactPhone: ''
 })
 const editingId = ref(null)
+
+const editCities = computed(() => {
+  return editCitiesByProvince[editForm.value.province] || []
+})
 
 function statusClass(s) {
   if (s === 1) return 'approved'
@@ -196,11 +224,16 @@ function viewDetail(item) {
 
 function editItem(item) {
   editingId.value = item.id
+  const parsed = parseLocation(item.missingLocation)
   editForm.value = {
+    title: item.title || '',
     name: item.name || '',
     gender: item.gender || '',
     ageAtMissing: item.ageAtMissing || '',
     missingDate: item.missingDate || '',
+    province: parsed.province,
+    city: parsed.city,
+    detailLocation: parsed.detail,
     missingLocation: item.missingLocation || '',
     height: item.height || '',
     weight: item.weight || '',
@@ -237,16 +270,23 @@ function removeEditImage(idx) {
 }
 
 async function submitEdit() {
+  if (!editForm.value.title) { alert('请输入标题'); return }
   if (!editForm.value.name) { alert('请输入姓名'); return }
+  if (!editForm.value.ageAtMissing) { alert('请输入失踪年龄'); return }
+  if (!editForm.value.missingDate) { alert('请选择失踪日期'); return }
+  if (!editForm.value.province) { alert('请选择失踪省份'); return }
+  if (!editForm.value.city) { alert('请选择失踪市/区'); return }
+  editForm.value.missingLocation = buildLocation(editForm.value.province, editForm.value.city, editForm.value.detailLocation)
   submitting.value = true
   try {
     if (editSelectedFiles.value.length > 0) {
       const fd = new FormData()
+      fd.append('title', editForm.value.title)
       fd.append('name', editForm.value.name)
       if (editForm.value.gender) fd.append('gender', editForm.value.gender)
-      if (editForm.value.ageAtMissing) fd.append('ageAtMissing', editForm.value.ageAtMissing)
-      if (editForm.value.missingDate) fd.append('missingDate', editForm.value.missingDate)
-      if (editForm.value.missingLocation) fd.append('missingLocation', editForm.value.missingLocation)
+      fd.append('ageAtMissing', editForm.value.ageAtMissing)
+      fd.append('missingDate', editForm.value.missingDate)
+      fd.append('missingLocation', editForm.value.missingLocation)
       if (editForm.value.height) fd.append('height', editForm.value.height)
       if (editForm.value.weight) fd.append('weight', editForm.value.weight)
       if (editForm.value.bloodType) fd.append('bloodType', editForm.value.bloodType)

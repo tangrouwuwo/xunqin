@@ -60,6 +60,7 @@ export function userApi() {
 export function missingPersonApi() {
   return {
     list: (params) => api.get('/missing-persons', { params }),
+    searchAll: (params) => api.get('/missing-persons', { params }),
     getMyList: (params) => api.get('/missing-persons/my', { params }),
     getDetail: (id) => api.get(`/missing-persons/${id}`),
     create: (data) => api.post('/missing-persons', data),
@@ -86,6 +87,7 @@ export function adminApi() {
     approveMissingPerson: (id, remark) => api.put(`/admin/missing-persons/${id}/approve?approvalRemark=${encodeURIComponent(remark || '')}`),
     rejectMissingPerson: (id, remark) => api.put(`/admin/missing-persons/${id}/reject?rejectionRemark=${encodeURIComponent(remark || '')}`),
     deleteMissingPerson: (id) => api.delete(`/admin/missing-persons/${id}`),
+    getChangeLogs: (id) => api.get(`/admin/missing-persons/${id}/change-logs`),
     listTasks: (params) => api.get('/admin/tasks', { params }),
     createTask: (data) => api.post('/admin/tasks', data)
   }

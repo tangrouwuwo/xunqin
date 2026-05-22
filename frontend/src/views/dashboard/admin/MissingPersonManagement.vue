@@ -25,13 +25,14 @@
         <div class="table-responsive">
           <table class="table table-hover">
             <thead class="table-light">
-              <tr><th>ID</th><th>姓名</th><th>性别</th><th>失踪年龄</th><th>失踪日期</th><th>发布者</th><th>状态</th><th>操作</th></tr>
+              <tr><th>ID</th><th>标题</th><th>姓名</th><th>性别</th><th>失踪年龄</th><th>失踪日期</th><th>发布者</th><th>状态</th><th>操作</th></tr>
             </thead>
             <tbody>
-              <tr v-if="loading"><td colspan="8" class="text-center py-4"><div class="loader"></div></td></tr>
-              <tr v-else-if="list.length === 0"><td colspan="8" class="text-center text-muted py-4">暂无数据</td></tr>
+              <tr v-if="loading"><td colspan="9" class="text-center py-4"><div class="loader"></div></td></tr>
+              <tr v-else-if="list.length === 0"><td colspan="9" class="text-center text-muted py-4">暂无数据</td></tr>
               <tr v-for="item in list" :key="item.id">
                 <td>{{ item.id }}</td>
+                <td class="fw-bold">{{ item.title || item.name }}</td>
                 <td>{{ item.name }}</td>
                 <td>{{ item.gender || '-' }}</td>
                 <td>{{ item.ageAtMissing || '-' }}</td>
@@ -66,13 +67,26 @@
       </div>
     </div>
     <div v-if="showDetail" class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">寻亲详情 - {{ detailItem.name }}</h5>
+            <h5 class="modal-title">寻亲详情</h5>
             <button type="button" class="btn-close" @click="showDetail = false"></button>
           </div>
           <div class="modal-body">
+            <!-- 照片展示 -->
+            <div v-if="photosList.length > 0" class="mb-4">
+              <div class="row g-2">
+                <div v-for="(photo, idx) in photosList" :key="idx" class="col-md-4">
+                  <img :src="photo" class="img-fluid rounded" style="height: 200px; width: 100%; object-fit: cover;"
+                       @error="e => e.target.style.display='none'">
+                </div>
+              </div>
+            </div>
+
+            <h4 class="fw-bold mb-3">{{ detailItem.title || detailItem.name }}</h4>
+
+            <!-- 基本信息 -->
             <div class="row">
               <div class="col-md-6"><strong>姓名：</strong>{{ detailItem.name }}</div>
               <div class="col-md-6"><strong>性别：</strong>{{ detailItem.gender || '-' }}</div>
@@ -89,6 +103,33 @@
               <div class="col-md-6 mt-2"><strong>联系人：</strong>{{ detailItem.contactName || '-' }}</div>
               <div class="col-md-6 mt-2"><strong>联系电话：</strong>{{ detailItem.contactPhone || '-' }}</div>
             </div>
+
+            <!-- 变更记录 -->
+            <div v-if="changeLogs.length > 0" class="mt-4 pt-3 border-top">
+              <div class="d-flex align-items-center mb-3">
+                <h6 class="mb-0 me-2"><i class="fas fa-history text-info me-1"></i>修改历史</h6>
+                <span class="badge bg-info rounded-pill">{{ changeLogs.length }} 项变更</span>
+                <button class="btn btn-sm btn-link ms-auto" @click="showChangeLogs = !showChangeLogs">
+                  {{ showChangeLogs ? '收起' : '展开' }}
+                  <i class="fas" :class="showChangeLogs ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+              </div>
+              <div v-if="showChangeLogs" class="table-responsive">
+                <table class="table table-sm table-bordered mb-0">
+                  <thead class="table-light">
+                    <tr><th style="width:15%">字段</th><th style="width:35%">原值</th><th style="width:35%">新值</th><th style="width:15%">修改时间</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="log in changeLogs" :key="log.id">
+                      <td class="fw-medium">{{ log.fieldName }}</td>
+                      <td class="text-muted" style="word-break:break-all">{{ log.oldValue || '(空)' }}</td>
+                      <td class="text-danger" style="word-break:break-all">{{ log.newValue || '(空)' }}</td>
+                      <td class="small">{{ formatTime(log.createTime) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="showDetail = false">关闭</button>
@@ -100,19 +141,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { adminApi } from '@/api'
 
 const list = ref([])
 const loading = ref(true)
 const showDetail = ref(false)
 const detailItem = ref({})
+const showChangeLogs = ref(true)
+const changeLogs = ref([])
 const filterStatus = ref('')
 const filterName = ref('')
 const filterUsername = ref('')
 const currentPage = ref(1)
 const totalPages = ref(1)
 const pageSize = ref(10)
+
+function formatTime(t) {
+  if (!t) return '-'
+  return t.substring(0, 16).replace('T', ' ')
+}
+
+const photosList = computed(() => {
+  if (!detailItem.value || !detailItem.value.photos) return []
+  return detailItem.value.photos.split(',').filter(p => p && p.trim())
+})
 
 function statusClass(s) {
   if (s === 1) return 'approved'
@@ -149,9 +202,19 @@ function changePage(p) {
   loadData()
 }
 
-function viewDetail(item) {
-  detailItem.value = item
+async function viewDetail(item) {
+  detailItem.value = { ...item }
   showDetail.value = true
+  showChangeLogs.value = true
+  changeLogs.value = []
+  try {
+    const res = await adminApi().getChangeLogs(item.id)
+    if (res.code === 200 && res.data) {
+      changeLogs.value = Array.isArray(res.data) ? res.data : []
+    }
+  } catch (e) {
+    console.error('获取变更记录失败', e)
+  }
 }
 
 async function approve(item) {

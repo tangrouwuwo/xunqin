@@ -85,7 +85,26 @@ public class ClueServiceImpl implements ClueService {
         }
 
         wrapper.orderByDesc("create_time");
-        return clueMapper.selectPage(page, wrapper);
+        Page<Clue> resultPage = clueMapper.selectPage(page, wrapper);
+        enrichClueNames(resultPage.getRecords());
+        return resultPage;
+    }
+
+    private void enrichClueNames(List<Clue> clues) {
+        for (Clue clue : clues) {
+            if (clue.getMissingPersonId() != null) {
+                MissingPerson mp = missingPersonMapper.selectById(clue.getMissingPersonId());
+                if (mp != null) {
+                    clue.setMissingPersonName(mp.getName());
+                }
+            }
+            if (clue.getProviderId() != null) {
+                com.xunqin.entity.User provider = userService.getUserById(clue.getProviderId());
+                if (provider != null) {
+                    clue.setSubmitterName(provider.getNickname() != null ? provider.getNickname() : provider.getUsername());
+                }
+            }
+        }
     }
 
     @Override
@@ -99,7 +118,9 @@ public class ClueServiceImpl implements ClueService {
         }
 
         wrapper.orderByDesc("create_time");
-        return clueMapper.selectPage(page, wrapper);
+        Page<Clue> resultPage = clueMapper.selectPage(page, wrapper);
+        enrichClueNames(resultPage.getRecords());
+        return resultPage;
     }
 
     @Override
@@ -108,6 +129,7 @@ public class ClueServiceImpl implements ClueService {
         if (clue == null) {
             throw new BusinessException("线索不存在");
         }
+        enrichClueNames(java.util.Collections.singletonList(clue));
         return clue;
     }
 
@@ -234,15 +256,20 @@ public class ClueServiceImpl implements ClueService {
             throw new BusinessException("无权修改此线索");
         }
 
-        if (clue.getStatus() != StatusConstant.CLUE_PENDING) {
-            throw new BusinessException("只能修改待审核的线索");
-        }
-
         clue.setIsAnonymous(isAnonymous != null ? isAnonymous : 0);
         clue.setContent(content);
         clue.setContactName(contactName);
         clue.setContactPhone(contactPhone);
         clue.setContactEmail(contactEmail);
+
+        // 修改后重新置为待审核状态
+        if (clue.getStatus() != StatusConstant.CLUE_PENDING) {
+            clue.setStatus(StatusConstant.CLUE_PENDING);
+            clue.setHandlerId(null);
+            clue.setHandleResult(null);
+            clue.setHandleRemark(null);
+            clue.setHandleTime(null);
+        }
 
         clueMapper.updateById(clue);
 
@@ -281,11 +308,7 @@ public class ClueServiceImpl implements ClueService {
             throw new BusinessException("无权删除此线索");
         }
 
-        if (clue.getStatus() != StatusConstant.CLUE_PENDING) {
-            throw new BusinessException("只能删除待审核的线索");
-        }
-
-        clueMapper.deleteById(id);
+        clueMapper.physicalDeleteById(id);
     }
 
     @Override

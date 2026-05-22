@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xunqin.common.exception.BusinessException;
 import com.xunqin.vo.MissingPersonVO;
 import com.xunqin.entity.MissingPerson;
+import com.xunqin.entity.MissingPersonChangeLog;
+import com.xunqin.mapper.MissingPersonChangeLogMapper;
 import com.xunqin.mapper.MissingPersonMapper;
 import com.xunqin.service.MissingPersonService;
 import com.xunqin.service.NotificationService;
@@ -40,8 +42,11 @@ public class MissingPersonServiceImpl implements MissingPersonService {
     @Autowired
     private com.xunqin.mapper.UserMapper userMapper;
 
+    @Autowired
+    private MissingPersonChangeLogMapper missingPersonChangeLogMapper;
+
     @Override
-    public Page<MissingPerson> searchMissingPersons(String name, String gender, String location, String startDate, String endDate,
+    public Page<MissingPerson> searchMissingPersons(String name, String gender, String location, String province, String startDate, String endDate,
                                                   Integer pageNum, Integer pageSize) {
         Page<MissingPerson> page = new Page<>(pageNum, pageSize);
         QueryWrapper<MissingPerson> wrapper = new QueryWrapper<>();
@@ -56,6 +61,9 @@ public class MissingPersonServiceImpl implements MissingPersonService {
         }
         if (location != null) {
             wrapper.like("missing_location", location);
+        }
+        if (province != null) {
+            wrapper.like("missing_location", province + "|%");
         }
         if (startDate != null) {
             wrapper.ge("missing_date", startDate);
@@ -170,33 +178,59 @@ public class MissingPersonServiceImpl implements MissingPersonService {
             throw new BusinessException("无权修改他人的寻亲信息");
         }
 
-        existing.setName(missingPerson.getName());
-        existing.setGender(missingPerson.getGender());
-        existing.setBirthDate(missingPerson.getBirthDate());
-        existing.setAgeAtMissing(missingPerson.getAgeAtMissing());
-        existing.setCurrentAge(missingPerson.getCurrentAge());
-        existing.setHeight(missingPerson.getHeight());
-        existing.setWeight(missingPerson.getWeight());
-        existing.setAppearance(missingPerson.getAppearance());
-        existing.setClothing(missingPerson.getClothing());
-        existing.setSpecialFeatures(missingPerson.getSpecialFeatures());
-        existing.setMissingDate(missingPerson.getMissingDate());
-        existing.setMissingLocation(missingPerson.getMissingLocation());
-        existing.setMissingLocationLat(missingPerson.getMissingLocationLat());
-        existing.setMissingLocationLng(missingPerson.getMissingLocationLng());
-        existing.setMissingCause(missingPerson.getMissingCause());
-        existing.setDescription(missingPerson.getDescription());
-        existing.setPhotos(missingPerson.getPhotos());
-        existing.setVideos(missingPerson.getVideos());
-        existing.setContactName(missingPerson.getContactName());
-        existing.setContactPhone(missingPerson.getContactPhone());
-        existing.setContactEmail(missingPerson.getContactEmail());
-        existing.setReward(missingPerson.getReward());
-        
         // 管理员可以直接修改状态，普通用户修改后需要重新审核
         if (user.getRole().equals("ADMIN")) {
+            existing.setTitle(missingPerson.getTitle());
+            existing.setName(missingPerson.getName());
+            existing.setGender(missingPerson.getGender());
+            existing.setBirthDate(missingPerson.getBirthDate());
+            existing.setAgeAtMissing(missingPerson.getAgeAtMissing());
+            existing.setCurrentAge(missingPerson.getCurrentAge());
+            existing.setHeight(missingPerson.getHeight());
+            existing.setWeight(missingPerson.getWeight());
+            existing.setAppearance(missingPerson.getAppearance());
+            existing.setClothing(missingPerson.getClothing());
+            existing.setSpecialFeatures(missingPerson.getSpecialFeatures());
+            existing.setMissingDate(missingPerson.getMissingDate());
+            existing.setMissingLocation(missingPerson.getMissingLocation());
+            existing.setMissingLocationLat(missingPerson.getMissingLocationLat());
+            existing.setMissingLocationLng(missingPerson.getMissingLocationLng());
+            existing.setMissingCause(missingPerson.getMissingCause());
+            existing.setDescription(missingPerson.getDescription());
+            existing.setPhotos(missingPerson.getPhotos());
+            existing.setVideos(missingPerson.getVideos());
+            existing.setContactName(missingPerson.getContactName());
+            existing.setContactPhone(missingPerson.getContactPhone());
+            existing.setContactEmail(missingPerson.getContactEmail());
+            existing.setReward(missingPerson.getReward());
             existing.setStatus(missingPerson.getStatus());
         } else {
+            // 先记录变更（必须在更新existing之前记录）
+            saveChangeLog(existing, missingPerson, userId, user.getUsername());
+            
+            existing.setTitle(missingPerson.getTitle());
+            existing.setName(missingPerson.getName());
+            existing.setGender(missingPerson.getGender());
+            existing.setBirthDate(missingPerson.getBirthDate());
+            existing.setAgeAtMissing(missingPerson.getAgeAtMissing());
+            existing.setCurrentAge(missingPerson.getCurrentAge());
+            existing.setHeight(missingPerson.getHeight());
+            existing.setWeight(missingPerson.getWeight());
+            existing.setAppearance(missingPerson.getAppearance());
+            existing.setClothing(missingPerson.getClothing());
+            existing.setSpecialFeatures(missingPerson.getSpecialFeatures());
+            existing.setMissingDate(missingPerson.getMissingDate());
+            existing.setMissingLocation(missingPerson.getMissingLocation());
+            existing.setMissingLocationLat(missingPerson.getMissingLocationLat());
+            existing.setMissingLocationLng(missingPerson.getMissingLocationLng());
+            existing.setMissingCause(missingPerson.getMissingCause());
+            existing.setDescription(missingPerson.getDescription());
+            existing.setPhotos(missingPerson.getPhotos());
+            existing.setVideos(missingPerson.getVideos());
+            existing.setContactName(missingPerson.getContactName());
+            existing.setContactPhone(missingPerson.getContactPhone());
+            existing.setContactEmail(missingPerson.getContactEmail());
+            existing.setReward(missingPerson.getReward());
             existing.setStatus(0); // 修改后重新审核
             
             // 发送通知给管理员
@@ -228,44 +262,81 @@ public class MissingPersonServiceImpl implements MissingPersonService {
             throw new BusinessException("无权修改他人的寻亲信息");
         }
 
-        existing.setName(missingPerson.getName());
-        existing.setGender(missingPerson.getGender());
-        existing.setBirthDate(missingPerson.getBirthDate());
-        existing.setAgeAtMissing(missingPerson.getAgeAtMissing());
-        existing.setCurrentAge(missingPerson.getCurrentAge());
-        existing.setHeight(missingPerson.getHeight());
-        existing.setWeight(missingPerson.getWeight());
-        existing.setAppearance(missingPerson.getAppearance());
-        existing.setClothing(missingPerson.getClothing());
-        existing.setSpecialFeatures(missingPerson.getSpecialFeatures());
-        existing.setMissingDate(missingPerson.getMissingDate());
-        existing.setMissingLocation(missingPerson.getMissingLocation());
-        existing.setMissingLocationLat(missingPerson.getMissingLocationLat());
-        existing.setMissingLocationLng(missingPerson.getMissingLocationLng());
-        existing.setMissingCause(missingPerson.getMissingCause());
-        existing.setDescription(missingPerson.getDescription());
-        existing.setContactName(missingPerson.getContactName());
-        existing.setContactPhone(missingPerson.getContactPhone());
-        existing.setContactEmail(missingPerson.getContactEmail());
-        existing.setReward(missingPerson.getReward());
-        
-        // 处理图片上传
-        if (photos != null && photos.length > 0) {
-            // 删除旧图片
-            String oldPhotos = existing.getPhotos();
-            if (oldPhotos != null && !oldPhotos.isEmpty()) {
-                deletePhotos(oldPhotos);
-            }
-            
-            // 上传新图片
-            String photoUrls = uploadPhotos(photos);
-            existing.setPhotos(photoUrls);
-        }
-        
         // 管理员可以直接修改状态，普通用户修改后需要重新审核
         if (user.getRole().equals("ADMIN")) {
+            existing.setTitle(missingPerson.getTitle());
+            existing.setName(missingPerson.getName());
+            existing.setGender(missingPerson.getGender());
+            existing.setBirthDate(missingPerson.getBirthDate());
+            existing.setAgeAtMissing(missingPerson.getAgeAtMissing());
+            existing.setCurrentAge(missingPerson.getCurrentAge());
+            existing.setHeight(missingPerson.getHeight());
+            existing.setWeight(missingPerson.getWeight());
+            existing.setAppearance(missingPerson.getAppearance());
+            existing.setClothing(missingPerson.getClothing());
+            existing.setSpecialFeatures(missingPerson.getSpecialFeatures());
+            existing.setMissingDate(missingPerson.getMissingDate());
+            existing.setMissingLocation(missingPerson.getMissingLocation());
+            existing.setMissingLocationLat(missingPerson.getMissingLocationLat());
+            existing.setMissingLocationLng(missingPerson.getMissingLocationLng());
+            existing.setMissingCause(missingPerson.getMissingCause());
+            existing.setDescription(missingPerson.getDescription());
+            existing.setContactName(missingPerson.getContactName());
+            existing.setContactPhone(missingPerson.getContactPhone());
+            existing.setContactEmail(missingPerson.getContactEmail());
+            existing.setReward(missingPerson.getReward());
+            
+            // 处理图片上传
+            if (photos != null && photos.length > 0) {
+                String oldPhotos = existing.getPhotos();
+                if (oldPhotos != null && !oldPhotos.isEmpty()) {
+                    deletePhotos(oldPhotos);
+                }
+                String photoUrls = uploadPhotos(photos);
+                existing.setPhotos(photoUrls);
+            } else {
+                existing.setPhotos(missingPerson.getPhotos());
+            }
+            existing.setVideos(missingPerson.getVideos());
             existing.setStatus(missingPerson.getStatus());
         } else {
+            // 先记录变更（必须在更新existing之前记录）
+            saveChangeLog(existing, missingPerson, userId, user.getUsername());
+            
+            existing.setTitle(missingPerson.getTitle());
+            existing.setName(missingPerson.getName());
+            existing.setGender(missingPerson.getGender());
+            existing.setBirthDate(missingPerson.getBirthDate());
+            existing.setAgeAtMissing(missingPerson.getAgeAtMissing());
+            existing.setCurrentAge(missingPerson.getCurrentAge());
+            existing.setHeight(missingPerson.getHeight());
+            existing.setWeight(missingPerson.getWeight());
+            existing.setAppearance(missingPerson.getAppearance());
+            existing.setClothing(missingPerson.getClothing());
+            existing.setSpecialFeatures(missingPerson.getSpecialFeatures());
+            existing.setMissingDate(missingPerson.getMissingDate());
+            existing.setMissingLocation(missingPerson.getMissingLocation());
+            existing.setMissingLocationLat(missingPerson.getMissingLocationLat());
+            existing.setMissingLocationLng(missingPerson.getMissingLocationLng());
+            existing.setMissingCause(missingPerson.getMissingCause());
+            existing.setDescription(missingPerson.getDescription());
+            existing.setContactName(missingPerson.getContactName());
+            existing.setContactPhone(missingPerson.getContactPhone());
+            existing.setContactEmail(missingPerson.getContactEmail());
+            existing.setReward(missingPerson.getReward());
+            
+            // 处理图片上传
+            if (photos != null && photos.length > 0) {
+                String oldPhotos = existing.getPhotos();
+                if (oldPhotos != null && !oldPhotos.isEmpty()) {
+                    deletePhotos(oldPhotos);
+                }
+                String photoUrls = uploadPhotos(photos);
+                existing.setPhotos(photoUrls);
+            } else {
+                existing.setPhotos(missingPerson.getPhotos());
+            }
+            existing.setVideos(missingPerson.getVideos());
             existing.setStatus(0); // 修改后重新审核
             
             // 发送通知给管理员
@@ -459,5 +530,93 @@ public class MissingPersonServiceImpl implements MissingPersonService {
         }
         
         return ids;
+    }
+
+    @Override
+    public List<MissingPersonChangeLog> getChangeLogs(Long missingPersonId) {
+        QueryWrapper<MissingPersonChangeLog> wrapper = new QueryWrapper<>();
+        wrapper.eq("missing_person_id", missingPersonId)
+               .orderByDesc("create_time");
+        return missingPersonChangeLogMapper.selectList(wrapper);
+    }
+
+    private String fieldLabel(String fieldName) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("name", "姓名");
+        labels.put("gender", "性别");
+        labels.put("birthDate", "出生日期");
+        labels.put("ageAtMissing", "失踪年龄");
+        labels.put("currentAge", "当前年龄");
+        labels.put("height", "身高");
+        labels.put("weight", "体重");
+        labels.put("appearance", "体貌特征");
+        labels.put("clothing", "衣着描述");
+        labels.put("specialFeatures", "特殊特征");
+        labels.put("missingDate", "失踪日期");
+        labels.put("missingLocation", "失踪地点");
+        labels.put("missingCause", "失踪原因");
+        labels.put("description", "详细描述");
+        labels.put("contactName", "联系人");
+        labels.put("contactPhone", "联系电话");
+        labels.put("contactEmail", "联系邮箱");
+        labels.put("reward", "悬赏信息");
+        return labels.getOrDefault(fieldName, fieldName);
+    }
+
+    private void saveChangeLog(MissingPerson oldData, MissingPerson newData, Long userId, String username) {
+        List<MissingPersonChangeLog> logs = new ArrayList<>();
+        
+        compareAndAddLog(logs, oldData.getId(), userId, "name", oldData.getName(), newData.getName());
+        compareAndAddLog(logs, oldData.getId(), userId, "gender", oldData.getGender(), newData.getGender());
+        compareAndAddLog(logs, oldData.getId(), userId, "birthDate", 
+            oldData.getBirthDate() != null ? oldData.getBirthDate().toString() : null,
+            newData.getBirthDate() != null ? newData.getBirthDate().toString() : null);
+        compareAndAddLog(logs, oldData.getId(), userId, "ageAtMissing", 
+            oldData.getAgeAtMissing() != null ? oldData.getAgeAtMissing().toString() : null,
+            newData.getAgeAtMissing() != null ? newData.getAgeAtMissing().toString() : null);
+        compareAndAddLog(logs, oldData.getId(), userId, "currentAge",
+            oldData.getCurrentAge() != null ? oldData.getCurrentAge().toString() : null,
+            newData.getCurrentAge() != null ? newData.getCurrentAge().toString() : null);
+        compareAndAddLog(logs, oldData.getId(), userId, "height",
+            oldData.getHeight() != null ? oldData.getHeight().toString() : null,
+            newData.getHeight() != null ? newData.getHeight().toString() : null);
+        compareAndAddLog(logs, oldData.getId(), userId, "weight",
+            oldData.getWeight() != null ? oldData.getWeight().toString() : null,
+            newData.getWeight() != null ? newData.getWeight().toString() : null);
+        compareAndAddLog(logs, oldData.getId(), userId, "appearance", oldData.getAppearance(), newData.getAppearance());
+        compareAndAddLog(logs, oldData.getId(), userId, "clothing", oldData.getClothing(), newData.getClothing());
+        compareAndAddLog(logs, oldData.getId(), userId, "specialFeatures", oldData.getSpecialFeatures(), newData.getSpecialFeatures());
+        compareAndAddLog(logs, oldData.getId(), userId, "missingDate",
+            oldData.getMissingDate() != null ? oldData.getMissingDate().toString() : null,
+            newData.getMissingDate() != null ? newData.getMissingDate().toString() : null);
+        compareAndAddLog(logs, oldData.getId(), userId, "missingLocation", oldData.getMissingLocation(), newData.getMissingLocation());
+        compareAndAddLog(logs, oldData.getId(), userId, "missingCause", oldData.getMissingCause(), newData.getMissingCause());
+        compareAndAddLog(logs, oldData.getId(), userId, "description", oldData.getDescription(), newData.getDescription());
+        compareAndAddLog(logs, oldData.getId(), userId, "contactName", oldData.getContactName(), newData.getContactName());
+        compareAndAddLog(logs, oldData.getId(), userId, "contactPhone", oldData.getContactPhone(), newData.getContactPhone());
+        compareAndAddLog(logs, oldData.getId(), userId, "contactEmail", oldData.getContactEmail(), newData.getContactEmail());
+        compareAndAddLog(logs, oldData.getId(), userId, "reward", oldData.getReward(), newData.getReward());
+        
+        if (!logs.isEmpty()) {
+            for (MissingPersonChangeLog log : logs) {
+                log.setSeekerId(userId);
+                log.setCreateTime(LocalDateTime.now());
+                missingPersonChangeLogMapper.insert(log);
+            }
+        }
+    }
+
+    private void compareAndAddLog(List<MissingPersonChangeLog> logs, Long missingPersonId, Long userId,
+                                  String fieldName, String oldValue, String newValue) {
+        if (oldValue == null && newValue == null) return;
+        if (oldValue != null && oldValue.equals(newValue)) return;
+        if (newValue != null && newValue.equals(oldValue)) return;
+        
+        MissingPersonChangeLog log = new MissingPersonChangeLog();
+        log.setMissingPersonId(missingPersonId);
+        log.setFieldName(fieldLabel(fieldName));
+        log.setOldValue(oldValue);
+        log.setNewValue(newValue);
+        logs.add(log);
     }
 }

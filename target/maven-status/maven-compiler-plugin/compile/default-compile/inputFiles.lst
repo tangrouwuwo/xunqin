@@ -85,10 +85,12 @@ D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\service\impl\VolunteerApplicationServ
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\entity\AIChatMessage.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\vo\VolunteerApplicationVO.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\service\impl\MissingPersonServiceImpl.java
+D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\entity\MissingPersonChangeLog.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\service\impl\AIServiceImpl.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\entity\Clue.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\mapper\VolunteerActivityProgressMapper.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\entity\VolunteerActivityProgress.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\entity\VolunteerNotification.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\vo\TaskVO.java
+D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\mapper\MissingPersonChangeLogMapper.java
 D:\Ñ°Ç×ÍøÕ¾Éı¼¶°æ\src\main\java\com\xunqin\mapper\ClueProviderNotificationMapper.java

@@ -29,6 +29,12 @@ public class Clue implements Serializable {
 
     private String contactEmail;
 
+    @TableField(exist = false)
+    private String missingPersonName;
+
+    @TableField(exist = false)
+    private String submitterName;
+
     private Integer status;
 
     private Long handlerId;

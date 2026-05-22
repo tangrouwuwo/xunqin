@@ -32,6 +32,7 @@ DROP TABLE IF EXISTS `missing_person`;
 CREATE TABLE `missing_person` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `seeker_id` BIGINT NOT NULL COMMENT '寻亲者ID',
+  `title` VARCHAR(200) NOT NULL COMMENT '寻亲标题',
   `name` VARCHAR(50) NOT NULL COMMENT '失踪人员姓名',
   `gender` VARCHAR(10) DEFAULT NULL COMMENT '性别',
   `birth_date` DATE DEFAULT NULL COMMENT '出生日期',
@@ -568,3 +569,18 @@ CREATE TABLE `volunteer_application` (
 ALTER TABLE `task`
     ADD COLUMN `review_remark` VARCHAR(500) DEFAULT NULL COMMENT '审核备注（仅拒绝时填写）' AFTER `result`,
     MODIFY COLUMN `status` TINYINT DEFAULT 0 COMMENT '状态：0-待认领 1-进行中 2-已完成 3-已取消 4-待审核 5-已拒绝';
+
+-- 寻亲信息变更记录表
+DROP TABLE IF EXISTS `missing_person_change_log`;
+CREATE TABLE `missing_person_change_log` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `missing_person_id` BIGINT NOT NULL COMMENT '寻亲信息ID',
+  `seeker_id` BIGINT DEFAULT NULL COMMENT '修改者ID',
+  `field_name` VARCHAR(100) NOT NULL COMMENT '变更字段名',
+  `old_value` TEXT COMMENT '旧值',
+  `new_value` TEXT COMMENT '新值',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_missing_person_id` (`missing_person_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='寻亲信息变更记录表';

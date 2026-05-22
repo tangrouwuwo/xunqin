@@ -9,7 +9,8 @@
       >
     </div>
     <div class="card-body p-4">
-      <h5 class="card-title fw-bold mb-3">{{ person.name }}</h5>
+      <h5 class="card-title fw-bold mb-1" style="font-size: 1.25rem;">{{ person.title || person.name }}</h5>
+      <p class="text-muted small mb-2">被寻人：{{ person.name }}</p>
       <p class="card-text text-muted mb-3">
         {{ person.gender || '-' }} | {{ person.ageAtMissing || '-' }}岁
         <span v-if="person.missingDate"> | {{ formatDate(person.missingDate) }}</span>

@@ -18,8 +18,8 @@
             <td>{{ item.handleRemark || '-' }}</td>
             <td>{{ formatTime(item.createTime) }}</td>
             <td>
-              <button v-if="item.status === 0" class="btn btn-sm btn-outline-primary me-1" @click="editClue(item)"><i class="fas fa-edit"></i></button>
-              <button v-if="item.status === 0" class="btn btn-sm btn-outline-danger" @click="deleteClue(item)"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-sm btn-outline-primary me-1" @click="editClue(item)"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-sm btn-outline-danger" @click="deleteClue(item)"><i class="fas fa-trash"></i></button>
             </td>
           </tr>
         </tbody>

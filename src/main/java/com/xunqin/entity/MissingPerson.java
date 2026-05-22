@@ -18,6 +18,8 @@ public class MissingPerson implements Serializable {
 
     private Long seekerId;
 
+    private String title;
+
     private String name;
 
     private String gender;

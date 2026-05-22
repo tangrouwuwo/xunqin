@@ -12,6 +12,7 @@ public class MissingPersonVO {
     private Long id;
     private Long seekerId;
     private String seekerName;
+    private String title;
     private String name;
     private String gender;
     private LocalDate birthDate;
@@ -48,6 +49,7 @@ public class MissingPersonVO {
         this.id = person.getId();
         this.seekerId = person.getSeekerId();
         this.seekerName = seekerName;
+        this.title = person.getTitle();
         this.name = person.getName();
         this.gender = person.getGender();
         this.birthDate = person.getBirthDate();

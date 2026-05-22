@@ -65,18 +65,13 @@
           </div>
           <div class="modal-body">
             <div class="row mb-3">
-              <div class="col-md-4"><strong>关联寻亲信息ID：</strong>{{ detail.missingPersonId }}</div>
-              <div class="col-md-4"><strong>提交人ID：</strong>{{ detail.providerId || '匿名' }}</div>
+              <div class="col-md-4"><strong>关联寻亲者：</strong>{{ detail.missingPersonName || detail.missingPersonId || '-' }}</div>
+              <div class="col-md-4"><strong>提交人：</strong>{{ detail.submitterName || (detail.isAnonymous == 1 ? '匿名' : detail.providerId || '匿名') }}</div>
               <div class="col-md-4"><strong>匿名提交：</strong>{{ detail.isAnonymous == 1 ? '是' : '否' }}</div>
             </div>
             <div class="mb-3">
-              <strong>线索内容：</strong>
-              <p class="mt-2 p-3 bg-light rounded" style="white-space:pre-wrap">{{ detail.content }}</p>
-            </div>
-            <div class="row mb-3" v-if="detail.isAnonymous != 1">
-              <div class="col-md-4"><strong>联系人：</strong>{{ detail.contactName || '-' }}</div>
-              <div class="col-md-4"><strong>电话：</strong>{{ detail.contactPhone || '-' }}</div>
-              <div class="col-md-4"><strong>邮箱：</strong>{{ detail.contactEmail || '-' }}</div>
+              <strong class="fs-5 text-primary"><i class="fas fa-align-left me-2"></i>线索内容</strong>
+              <div class="mt-2 p-4 bg-light rounded border-start border-primary border-4" style="white-space:pre-wrap; font-size:1.05rem; line-height:1.8; min-height:80px;">{{ detail.content || '暂无内容' }}</div>
             </div>
             <div class="row text-muted small">
               <div class="col-md-6">提交时间：{{ formatTime(detail.createTime) }}</div>
@@ -199,8 +194,14 @@ function formatTime(t) {
 }
 
 function viewDetail(item) {
-  detail.value = item
+  detail.value = { ...item }
   showDetail.value = true
+  // 单独获取详情以确保字段完整
+  clueApi().getById(item.id).then(res => {
+    if (res.code === 200) {
+      detail.value = res.data
+    }
+  }).catch(() => {})
 }
 
 function approveClue(item) {
