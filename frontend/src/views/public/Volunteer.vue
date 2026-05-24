@@ -2,7 +2,7 @@
   <div class="container py-5">
     <!-- 社会价值文案 - 吸引用户成为志愿者 -->
     <div class="text-center mb-5">
-      <div class="bg-light rounded-4 p-4 mb-4" style="border-left: 5px solid #0d6efd;">
+      <div class="bg-light rounded-4 p-4 mb-4" style="border-left: 5px solid var(--primary-color);">
         <h5 class="text-primary fw-bold mb-3"><i class="fas fa-heart me-2"></i>您的参与，改变的不只是一个家庭</h5>
         <div class="row justify-content-center">
           <div class="col-md-10">

@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- 英雄区 -->
-    <section class="hero-section text-white py-5" style="background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-size: cover; background-position: center;">
+    <section class="hero-section text-white py-5" style="background: linear-gradient(135deg, #e94c3d 0%, #c0392b 50%, #a93226 100%); background-size: cover; background-position: center;">
       <div class="container text-center py-5">
         <h1 class="display-4 fw-bold mb-4 fade-in visible">让爱回家，让亲情重聚</h1>
         <p class="lead mb-5 fade-in visible">我们致力于帮助失散家庭重新团聚，通过社会力量和科技手段，让每一个寻亲者都能找到回家的路。</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
-          <router-link to="/missing-persons-search" class="btn btn-light text-primary fw-bold px-5 py-3 rounded-3 shadow-lg">
+          <router-link to="/missing-persons-search" class="btn btn-light text-danger fw-bold px-5 py-3 rounded-3 shadow-lg" style="color: var(--primary-color) !important;">
             <i class="fas fa-search me-2"></i> 寻亲查询
           </router-link>
           <router-link to="/success-cases" class="btn btn-outline-light fw-bold px-5 py-3 rounded-3 border-2">
@@ -29,9 +29,10 @@
         <div class="row g-4" id="successCases">
           <div class="col-md-6 col-lg-4" v-for="(item, idx) in successCases" :key="idx">
             <div class="card shadow h-100 border-0" :style="{ animationDelay: idx * 0.1 + 's' }">
-              <div class="position-relative overflow-hidden">
-                <div class="h-64 d-flex align-items-center justify-content-center" :class="getBgClass(item)">
-                  <i :class="'fas fa-heart text-white'" style="font-size: 4rem; opacity: 0.8;"></i>
+              <div class="position-relative overflow-hidden" style="height: 200px;">
+                <img :src="item.photo" class="w-100 h-100" style="object-fit: cover;" :alt="item.title" @error="e => e.target.style.display='none'">
+                <div v-if="!item.photo" class="h-100 w-100 d-flex align-items-center justify-content-center bg-primary">
+                  <i class="fas fa-heart text-white" style="font-size: 4rem; opacity: 0.8;"></i>
                 </div>
                 <div class="position-absolute top-0 start-0 px-3 py-2 rounded-bottom-end bg-primary text-white">
                   <i class="fas fa-star me-1"></i> 团聚时刻
@@ -40,13 +41,8 @@
               <div class="card-body p-4">
                 <h5 class="card-title fw-bold mb-3" style="color: var(--primary-color);">{{ item.title }}</h5>
                 <p class="card-text text-secondary mb-4">{{ (item.story || '').substring(0, 120) }}{{ (item.story || '').length > 120 ? '...' : '' }}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="text-muted small">
-                    <i class="fas fa-map-marker-alt text-primary me-1"></i> {{ item.reunionLocation || '未知地点' }}
-                  </div>
-                  <router-link to="/success-cases" class="btn btn-primary btn-sm rounded-pill px-3">
-                    <i class="fas fa-arrow-right me-1"></i> 查看详情
-                  </router-link>
+                <div class="text-muted small">
+                  <i class="fas fa-map-marker-alt text-primary me-1"></i> {{ item.reunionLocation || '未知地点' }}
                 </div>
               </div>
             </div>
@@ -72,7 +68,7 @@
             <p class="text-secondary mb-4">每一份力量都能带来希望，每一次行动都能改变命运。作为志愿者，您可以：</p>
             <ul class="list-unstyled">
               <li v-for="(item, idx) in volunteerBenefits" :key="idx" class="d-flex align-items-center mb-3 fade-in">
-                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 40px; height: 40px;">
+                <div class="rounded-circle me-3 d-flex align-items-center justify-content-center flex-shrink-0" style="background: var(--primary-color); color: white; width: 40px; height: 40px;">
                   <i class="fas fa-check"></i>
                 </div>
                 <span>{{ item }}</span>
@@ -127,17 +123,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { successCaseApi } from '@/api'
+import { onMounted } from 'vue'
 
-const successCases = ref([])
-
-const bgClasses = ['bg-danger', 'bg-primary', 'bg-purple', 'bg-success', 'bg-orange', 'bg-pink']
-
-function getBgClass(item) {
-  const idx = item.id ? item.id % bgClasses.length : 0
-  return bgClasses[idx]
-}
+const successCases = [
+  {
+    title: '郭刚堂父子24年寻亲终团聚',
+    story: '1997年，郭刚堂年仅2岁半的儿子郭振在家门口被拐走。从此，郭刚堂骑摩托车走遍全国寻子，行程超过40万公里，足迹遍布大江南北。2021年7月，在公安机关的不懈努力下，郭振被成功找到，父子相拥而泣的场景感动了无数国人。',
+    reunionLocation: '河南·郑州',
+    photo: 'https://images.unsplash.com/photo-1542037104857-4bb4b9fe2433?w=600&h=400&fit=crop'
+  },
+  {
+    title: '孙海洋14年寻子路迎来团圆',
+    story: '2007年，孙海洋4岁的儿子孙卓在深圳被拐走。孙海洋夫妇14年如一日坚持寻子，走遍大江南北。2021年12月，在公安部打拐专项行动中，孙卓被成功找回，失散14年的一家三口终于团聚。',
+    reunionLocation: '广东·深圳',
+    photo: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=400&fit=crop'
+  },
+  {
+    title: '申军良找回被拐15年的儿子',
+    story: '2005年，申军良年仅1岁的儿子申聪在广州被抢走。申军良变卖全部家产坚持寻子，足迹遍布全国。2020年3月，广州警方成功抓获犯罪嫌疑人，找回已15岁的申聪，父子重逢的场面令人动容。',
+    reunionLocation: '广东·广州',
+    photo: 'https://images.unsplash.com/photo-1475503572774-15a45e5d60b9?w=600&h=400&fit=crop'
+  },
+  {
+    title: '李静芝32年坚守找回被拐儿子',
+    story: '1988年，李静芝年仅2岁的儿子毛寅在西安被拐走。32年间她走遍全国寻子，被称为"打拐妈妈"。2020年5月，在警方帮助下终于找到失散32年的儿子，她的坚持创造了寻亲奇迹。',
+    reunionLocation: '陕西·西安',
+    photo: 'https://images.unsplash.com/photo-1491013516836-7db643ee125a?w=600&h=400&fit=crop'
+  },
+  {
+    title: '陈升宽跨越25年的寻亲之路',
+    story: '1996年，陈升宽3岁的儿子陈俊哲在云南昆明走失。25年来陈升宽从未放弃寻找，走遍全国各地张贴寻人启事。2021年，在警方和志愿者的帮助下，终于与失散25年的儿子团聚。',
+    reunionLocation: '云南·昆明',
+    photo: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&h=400&fit=crop'
+  },
+  {
+    title: '王玉琼46年后与失散儿子重逢',
+    story: '1975年，王玉琼出生仅3个月的儿子在四川成都被抱走。46年来她始终保留着儿子的襁褓和照片，坚信终有一天能找到。2021年，通过DNA比对技术，终于与失散46年的儿子重逢。',
+    reunionLocation: '四川·成都',
+    photo: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=600&h=400&fit=crop'
+  }
+]
 
 const volunteerBenefits = [
   '参与线下寻亲活动',
@@ -152,16 +177,7 @@ const communityPosts = [
   { title: '成功案例分享', content: '感谢平台的帮助，我终于找到了失散15年的妹妹，谢谢所有志愿者的付出！', time: '2天前', likes: 42, comments: 15 }
 ]
 
-onMounted(async () => {
-  try {
-    const res = await successCaseApi().list({ pageNum: 1, pageSize: 6 })
-    if (res.code === 200) {
-      successCases.value = res.data.records || []
-    }
-  } catch (e) {
-    console.error('加载成功案例失败:', e)
-  }
-
+onMounted(() => {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) entry.target.classList.add('visible')
@@ -172,9 +188,5 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.bg-purple { background: linear-gradient(135deg, #c084fc, #9333ea); }
-.bg-orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
-.bg-pink { background: linear-gradient(135deg, #f472b6, #db2777); }
-.h-64 { height: 200px; }
 .rounded-bottom-end { border-bottom-right-radius: 0.375rem; }
 </style>

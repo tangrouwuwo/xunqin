@@ -36,7 +36,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .headers()
                 .frameOptions().sameOrigin()
                 .cacheControl().disable()
-                .and()
                 .addHeaderWriter(new StaticHeadersWriter(
                     "Cache-Control", "no-cache, no-store, must-revalidate, private",
                     "Pragma", "no-cache",

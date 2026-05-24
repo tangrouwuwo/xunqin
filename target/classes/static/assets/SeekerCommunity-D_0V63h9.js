@@ -1,0 +1,1 @@
+import{_ as e}from"./RoleCommunity-CjoJjnP2.js";import{h as r,u as o}from"./index-Dmh7Jx9y.js";import"./index-C1TxBqot.js";const n={__name:"SeekerCommunity",setup(t){return(a,m)=>(o(),r(e,{roleName:"寻亲者"}))}};export{n as default};

@@ -1,1 +1,0 @@
-import{_ as o}from"./RoleCommunity-B254656S.js";import{h as r,u as e}from"./index-8WQU_8sS.js";import"./index-C1TxBqot.js";const s={__name:"AdminCommunity",setup(m){return(t,a)=>(e(),r(o,{roleName:"管理员"}))}};export{s as default};

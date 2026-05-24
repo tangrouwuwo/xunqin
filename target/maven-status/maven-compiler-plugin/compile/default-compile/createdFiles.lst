@@ -45,7 +45,6 @@ com\xunqin\entity\TaskLog.class
 com\xunqin\service\UserService.class
 com\xunqin\entity\MissingPersonChangeLog.class
 com\xunqin\service\impl\VolunteerApplicationServiceImpl.class
-com\xunqin\config\SecurityConfig.class
 com\xunqin\vo\TaskVO.class
 com\xunqin\mapper\MissingPersonChangeLogMapper.class
 com\xunqin\mapper\VolunteerNotificationMapper.class
