@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -32,14 +33,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .cors().and()
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-            .headers().frameOptions().sameOrigin().and() // 允许同源frame嵌入
+            .headers()
+                .frameOptions().sameOrigin()
+                .cacheControl().disable()
+                .and()
+                .addHeaderWriter(new StaticHeadersWriter(
+                    "Cache-Control", "no-cache, no-store, must-revalidate, private",
+                    "Pragma", "no-cache",
+                    "Expires", "0"
+                ))
+                .and()
             .authorizeRequests()
-                .antMatchers("/", "/index.html", "/static/**", "/assets/**").permitAll() // 允许访问首页和Vue静态资源
-                .antMatchers("/*.html").permitAll() // 允许访问所有HTML页面
+                .antMatchers("/", "/index.html", "/static/**", "/assets/**").permitAll()
+                .antMatchers("/*.html").permitAll()
                 .antMatchers("/auth/**", "/doc.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs", "/api/**", "/volunteer-application/**").permitAll()
                 .antMatchers("/missing-persons/**", "/success-cases/**", "/community/**", "/community/posts/**", "/volunteer-activities/**", "/health", "/ai/**").permitAll()
-                .antMatchers("/uploads/**", "/images/**").permitAll() // 允许访问静态资源
-                .antMatchers("/volunteer.html").permitAll() // 允许访问志愿者页面
+                .antMatchers("/uploads/**", "/images/**").permitAll()
+                .antMatchers("/volunteer.html").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

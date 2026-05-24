@@ -2,26 +2,31 @@
   <div class="login-container">
     <div class="login-card">
       <h1 class="text-center mb-4 fw-bold"><i class="fas fa-user-plus me-2"></i>注册</h1>
-      <form @submit.prevent="handleRegister">
+      <form @submit.prevent="handleRegister" autocomplete="off">
+        <div style="position: absolute; left: -9999px" aria-hidden="true">
+          <input type="text" name="fake_username" tabindex="-1" autocomplete="off">
+          <input type="email" name="fake_email" tabindex="-1" autocomplete="off">
+          <input type="password" name="fake_password" tabindex="-1" autocomplete="off">
+        </div>
         <div class="mb-3">
           <label class="fw-semibold mb-2">用户名</label>
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="fas fa-user text-muted"></i></span>
-            <input v-model="form.username" type="text" class="form-control" placeholder="请输入用户名" required autocomplete="off" :readonly="isUsernameReadonly" @focus="onUsernameFocus" @click="onUsernameFocus">
+            <input v-model="form.username" type="text" class="form-control" placeholder="请输入用户名" required autocomplete="off" :name="'reg_username_' + fieldSuffix" :id="'reg_username_' + fieldSuffix" :readonly="isUsernameReadonly" @focus="onUsernameFocus" @click="onUsernameFocus">
           </div>
         </div>
         <div class="mb-3">
           <label class="fw-semibold mb-2">手机号</label>
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="fas fa-phone text-muted"></i></span>
-            <input v-model="form.phone" type="tel" class="form-control" placeholder="请输入11位手机号" required maxlength="11" autocomplete="off" :readonly="isPhoneReadonly" @focus="onPhoneFocus" @click="onPhoneFocus">
+            <input v-model="form.phone" type="tel" class="form-control" placeholder="请输入11位手机号" required maxlength="11" autocomplete="off" :name="'reg_phone_' + fieldSuffix" :id="'reg_phone_' + fieldSuffix" :readonly="isPhoneReadonly" @focus="onPhoneFocus" @click="onPhoneFocus">
           </div>
         </div>
         <div class="mb-3">
           <label class="fw-semibold mb-2">密码</label>
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="fas fa-lock text-muted"></i></span>
-            <input v-model="form.password" type="password" class="form-control" placeholder="请输入密码" required autocomplete="new-password" :readonly="isPasswordReadonly" @focus="onPasswordFocus" @click="onPasswordFocus">
+            <input v-model="form.password" type="text" class="form-control" placeholder="请输入密码" required autocomplete="new-password" :name="'reg_password_' + fieldSuffix" :id="'reg_password_' + fieldSuffix" :readonly="isPasswordReadonly" @focus="onPasswordFocus" @click="onPasswordFocus">
           </div>
         </div>
         <div class="mb-3">
@@ -64,6 +69,7 @@ const form = reactive({ username: '', phone: '', password: '', role: defaultRole
 const error = ref('')
 const success = ref('')
 const loading = ref(false)
+const fieldSuffix = ref('')
 
 const isUsernameReadonly = ref(true)
 const isPhoneReadonly = ref(true)
@@ -87,18 +93,39 @@ function onPasswordFocus() {
   if (isPasswordReadonly.value) {
     isPasswordReadonly.value = false
     form.password = ''
+    setTimeout(() => {
+      const input = document.getElementById('reg_password_' + fieldSuffix.value)
+      if (input) input.type = 'password'
+    }, 100)
   }
 }
 
-onMounted(() => {
-  form.username = ''; form.phone = ''; form.password = ''
+function resetForm() {
+  form.username = ''
+  form.phone = ''
+  form.password = ''
+  fieldSuffix.value = Date.now().toString(36) + Math.random().toString(36).substring(2, 6)
+  isUsernameReadonly.value = true
+  isPhoneReadonly.value = true
+  isPasswordReadonly.value = true
+
+  const passInput = document.getElementById('reg_password_' + fieldSuffix.value)
+  if (passInput) {
+    passInput.type = 'text'
+    passInput.value = ''
+  }
+
   const inputs = document.querySelectorAll('.login-card input')
   inputs.forEach(input => { input.value = '' })
+}
+
+onMounted(() => {
+  resetForm()
   setTimeout(() => {
-    form.username = ''; form.phone = ''; form.password = ''
     const inputs = document.querySelectorAll('.login-card input')
     inputs.forEach(input => { input.value = '' })
-  }, 50)
+    form.username = ''; form.phone = ''; form.password = ''
+  }, 100)
   setTimeout(() => {
     form.username = ''; form.phone = ''; form.password = ''
   }, 300)
