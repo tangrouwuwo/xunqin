@@ -2,17 +2,16 @@ server:
   port: 8080
   servlet:
     context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   tomcat:
     uri-encoding: UTF-8
 
 spring:
   application:
     name: xunqin-website
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
   
   # 数据源配置
   datasource:
