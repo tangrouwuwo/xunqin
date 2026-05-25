@@ -180,6 +180,9 @@ public class MissingPersonServiceImpl implements MissingPersonService {
 
         // 管理员可以直接修改状态，普通用户修改后需要重新审核
         if (user.getRole().equals("ADMIN")) {
+            // 记录变更
+            saveChangeLog(existing, missingPerson, userId, user.getUsername());
+            
             existing.setTitle(missingPerson.getTitle());
             existing.setName(missingPerson.getName());
             existing.setGender(missingPerson.getGender());
@@ -263,7 +266,19 @@ public class MissingPersonServiceImpl implements MissingPersonService {
         }
 
         // 管理员可以直接修改状态，普通用户修改后需要重新审核
+        // 先保存旧照片引用（必须在任何修改之前，用于后续删除旧照片）
+        String oldPhotosRef = existing.getPhotos();
+        
         if (user.getRole().equals("ADMIN")) {
+            // 先处理图片上传，确保saveChangeLog能正确对比照片变更
+            if (photos != null && photos.length > 0) {
+                String photoUrls = uploadPhotos(photos);
+                missingPerson.setPhotos(photoUrls);
+            }
+            
+            // 记录变更（必须在更新existing之前记录）
+            saveChangeLog(existing, missingPerson, userId, user.getUsername());
+            
             existing.setTitle(missingPerson.getTitle());
             existing.setName(missingPerson.getName());
             existing.setGender(missingPerson.getGender());
@@ -285,21 +300,21 @@ public class MissingPersonServiceImpl implements MissingPersonService {
             existing.setContactPhone(missingPerson.getContactPhone());
             existing.setContactEmail(missingPerson.getContactEmail());
             existing.setReward(missingPerson.getReward());
-            
-            // 处理图片上传
-            if (photos != null && photos.length > 0) {
-                String oldPhotos = existing.getPhotos();
-                if (oldPhotos != null && !oldPhotos.isEmpty()) {
-                    deletePhotos(oldPhotos);
-                }
-                String photoUrls = uploadPhotos(photos);
-                existing.setPhotos(photoUrls);
-            } else {
-                existing.setPhotos(missingPerson.getPhotos());
-            }
+            existing.setPhotos(missingPerson.getPhotos());
             existing.setVideos(missingPerson.getVideos());
             existing.setStatus(missingPerson.getStatus());
+            
+            // 删除旧照片（必须在saveChangeLog和字段赋值之后执行）
+            if (photos != null && photos.length > 0 && oldPhotosRef != null && !oldPhotosRef.isEmpty()) {
+                deletePhotos(oldPhotosRef);
+            }
         } else {
+            // 先处理图片上传，确保saveChangeLog能正确对比照片变更
+            if (photos != null && photos.length > 0) {
+                String photoUrls = uploadPhotos(photos);
+                missingPerson.setPhotos(photoUrls);
+            }
+            
             // 先记录变更（必须在更新existing之前记录）
             saveChangeLog(existing, missingPerson, userId, user.getUsername());
             
@@ -324,20 +339,14 @@ public class MissingPersonServiceImpl implements MissingPersonService {
             existing.setContactPhone(missingPerson.getContactPhone());
             existing.setContactEmail(missingPerson.getContactEmail());
             existing.setReward(missingPerson.getReward());
-            
-            // 处理图片上传
-            if (photos != null && photos.length > 0) {
-                String oldPhotos = existing.getPhotos();
-                if (oldPhotos != null && !oldPhotos.isEmpty()) {
-                    deletePhotos(oldPhotos);
-                }
-                String photoUrls = uploadPhotos(photos);
-                existing.setPhotos(photoUrls);
-            } else {
-                existing.setPhotos(missingPerson.getPhotos());
-            }
+            existing.setPhotos(missingPerson.getPhotos());
             existing.setVideos(missingPerson.getVideos());
             existing.setStatus(0); // 修改后重新审核
+            
+            // 删除旧照片（必须在saveChangeLog和字段赋值之后执行）
+            if (photos != null && photos.length > 0 && oldPhotosRef != null && !oldPhotosRef.isEmpty()) {
+                deletePhotos(oldPhotosRef);
+            }
             
             // 发送通知给管理员
             List<com.xunqin.entity.User> admins = userService.getAdmins();
@@ -560,6 +569,7 @@ public class MissingPersonServiceImpl implements MissingPersonService {
         labels.put("contactPhone", "联系电话");
         labels.put("contactEmail", "联系邮箱");
         labels.put("reward", "悬赏信息");
+        labels.put("photos", "照片");
         return labels.getOrDefault(fieldName, fieldName);
     }
 
@@ -596,6 +606,7 @@ public class MissingPersonServiceImpl implements MissingPersonService {
         compareAndAddLog(logs, oldData.getId(), userId, "contactPhone", oldData.getContactPhone(), newData.getContactPhone());
         compareAndAddLog(logs, oldData.getId(), userId, "contactEmail", oldData.getContactEmail(), newData.getContactEmail());
         compareAndAddLog(logs, oldData.getId(), userId, "reward", oldData.getReward(), newData.getReward());
+        compareAndAddLog(logs, oldData.getId(), userId, "photos", oldData.getPhotos(), newData.getPhotos());
         
         if (!logs.isEmpty()) {
             for (MissingPersonChangeLog log : logs) {
@@ -608,9 +619,13 @@ public class MissingPersonServiceImpl implements MissingPersonService {
 
     private void compareAndAddLog(List<MissingPersonChangeLog> logs, Long missingPersonId, Long userId,
                                   String fieldName, String oldValue, String newValue) {
-        if (oldValue == null && newValue == null) return;
-        if (oldValue != null && oldValue.equals(newValue)) return;
-        if (newValue != null && newValue.equals(oldValue)) return;
+        // 将空字符串视为null，避免前端传空串时产生虚假变更记录
+        String effectiveOld = (oldValue != null && oldValue.isEmpty()) ? null : oldValue;
+        String effectiveNew = (newValue != null && newValue.isEmpty()) ? null : newValue;
+        
+        if (effectiveOld == null && effectiveNew == null) return;
+        if (effectiveOld != null && effectiveOld.equals(effectiveNew)) return;
+        if (effectiveNew != null && effectiveNew.equals(effectiveOld)) return;
         
         MissingPersonChangeLog log = new MissingPersonChangeLog();
         log.setMissingPersonId(missingPersonId);

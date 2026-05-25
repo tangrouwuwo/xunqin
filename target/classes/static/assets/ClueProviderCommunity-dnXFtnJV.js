@@ -1,1 +1,0 @@
-import{_ as r}from"./RoleCommunity-D35Xl5M8.js";import{h as e,u as o}from"./index-DOhARrPX.js";import"./index-C1TxBqot.js";const n={__name:"ClueProviderCommunity",setup(t){return(a,m)=>(o(),e(r,{roleName:"线索提供者"}))}};export{n as default};

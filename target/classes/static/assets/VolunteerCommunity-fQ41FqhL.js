@@ -1,1 +1,0 @@
-import{_ as e}from"./RoleCommunity-D35Xl5M8.js";import{h as o,u as r}from"./index-DOhARrPX.js";import"./index-C1TxBqot.js";const s={__name:"VolunteerCommunity",setup(t){return(a,m)=>(r(),o(e,{roleName:"志愿者"}))}};export{s as default};
